@@ -1,0 +1,20 @@
+sample:
+  description: Sample ibeacon eddy combo
+  name: iBeacon and Eddystone
+tests:
+  sample.bluetooth.ibeacon:
+    harness: bluetooth
+    platform_allow:
+      - bbc_microbit
+      - qemu_x86
+    tags: bluetooth
+    integration_platforms:
+      - qemu_x86
+  sample.bluetooth.eddystone:
+    harness: bluetooth
+    platform_allow:
+      - qemu_cortex_m3
+      - qemu_x86
+    tags: bluetooth
+    integration_platforms:
+      - qemu_cortex_m3
