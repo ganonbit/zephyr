@@ -8,9 +8,7 @@
 #define ADV_DURATION_MS      1000
 #define MAX_EXT_ADV_DATA_LEN 191
 #define MAX_ADV_SETS         3
-#define HEADER_SIZE          4
 #define BEACON_DATA_SIZE     7
-#define TOTAL_HEADER_SIZE    (HEADER_SIZE + 2)
 #define MAX_BEACONS_PER_SET  25 // Static value, divisible by BEACON_BATCH_SIZE
 #define MAX_BEACONS          120
 #define MAX_WAIT_TIME_MS     950
@@ -23,11 +21,11 @@ struct beacon_info {
 
 static struct bt_le_ext_adv *adv_sets[MAX_ADV_SETS];
 static struct beacon_info beacon_queue[MAX_BEACONS];
-static atomic_t beacon_count = ATOMIC_INIT(0);
+static ATOMIC_DEFINE(beacon_count, 32);
 static atomic_t beacon_write_index = ATOMIC_INIT(0);
 static atomic_t beacon_read_index = ATOMIC_INIT(0);
 static atomic_t active_adv_sets = ATOMIC_INIT(0);
-static atomic_t adv_set_active_bitfield = ATOMIC_INIT(0);
+static ATOMIC_DEFINE(adv_set_active_bitfield, MAX_ADV_SETS);
 static atomic_t beacons_since_last_check = ATOMIC_INIT(0);
 
 static struct k_work_delayable adv_work;
@@ -37,7 +35,7 @@ static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 
 static void send_adv_data(void);
 
-static void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
+static inline void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 {
 	atomic_val_t write_index = atomic_get(&beacon_write_index);
 
@@ -45,29 +43,30 @@ static void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 	beacon_queue[write_index].rssi = rssi;
 
 	atomic_set(&beacon_write_index, (write_index + 1) % MAX_BEACONS);
-	atomic_inc(&beacon_count);
+	atomic_inc(beacon_count);
 
-	char addr_str[BT_ADDR_LE_STR_LEN];
-	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-	printk("Added new beacon: %s, RSSI: %d, total count: %ld, write index: %ld\n", addr_str,
-	       rssi, (long)atomic_get(&beacon_count), (long)write_index);
+	if (IS_ENABLED(CONFIG_DEBUG)) {
+		char addr_str[BT_ADDR_LE_STR_LEN];
+		bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+		printk("Added new beacon: %s, RSSI: %d, total count: %ld, write index: %ld\n",
+		       addr_str, rssi, (long)atomic_get(beacon_count), (long)write_index);
+	}
 }
 
 static void check_and_send(void)
 {
 	uint32_t current_time = k_uptime_get_32();
-	uint32_t current_beacon_count = atomic_get(&beacon_count);
+	uint32_t current_beacon_count = atomic_get(beacon_count);
 
-	printk("check_and_send: current_time=%u, last_send_time=%u, beacon_count=%u\n",
-	       current_time, last_send_time, current_beacon_count);
+	if (IS_ENABLED(CONFIG_DEBUG)) {
+		printk("check_and_send: current_time=%u, last_send_time=%u, beacon_count=%u\n",
+		       current_time, last_send_time, current_beacon_count);
+	}
 
-	if (current_beacon_count >= MAX_BEACONS_PER_SET) {
-		printk("Sending due to full set (%d beacons)\n", MAX_BEACONS_PER_SET);
-		send_adv_data();
-		last_send_time = current_time;
-	} else if (current_beacon_count >= BEACON_BATCH_SIZE &&
-		   (current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
-		printk("Sending due to timeout (%d beacons)\n", current_beacon_count);
+	if (current_beacon_count >= BEACON_BATCH_SIZE &&
+	    (current_beacon_count >= MAX_BEACONS_PER_SET ||
+	     (current_time - last_send_time) >= MAX_WAIT_TIME_MS)) {
+		printk("Sending %d beacons\n", current_beacon_count);
 		send_adv_data();
 		last_send_time = current_time;
 	} else {
@@ -78,9 +77,11 @@ static void check_and_send(void)
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad)
 {
-	char addr_str[BT_ADDR_LE_STR_LEN];
-	bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-	printk("Device found: %s, RSSI: %d\n", addr_str, rssi);
+	if (IS_ENABLED(CONFIG_DEBUG)) {
+		char addr_str[BT_ADDR_LE_STR_LEN];
+		bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+		printk("Device found: %s, RSSI: %d\n", addr_str, rssi);
+	}
 
 	add_beacon(addr, rssi);
 
@@ -98,17 +99,16 @@ static void send_adv_data(void)
 	uint8_t *ptr = ad_data;
 	uint8_t *end = ad_data + MAX_EXT_ADV_DATA_LEN;
 
-	*ptr++ = 0xFF;
-	*ptr++ = 0xFE;
-	*ptr++ = 0xFF;
-	*ptr++ = 0x00;
-	*ptr++ = (uint8_t)atomic_get(&beacon_write_index);
+	*ptr++ = 0xFF;                                     // Manufacturer specific data
+	*ptr++ = 0xFE;                                     // Company ID (Debug/Test - LSB)
+	*ptr++ = 0xFF;                                     // Company ID (Debug/Test - MSB)
+	*ptr++ = 0x00;                                     // Custom identifier or flags
+	*ptr++ = (uint8_t)atomic_get(&beacon_write_index); // Sequence number
 
-	int total_beacons = atomic_get(&beacon_count);
+	int total_beacons = atomic_get(beacon_count);
 	atomic_val_t read_index = atomic_get(&beacon_read_index);
 	int beacons_sent = 0;
 
-	// Ensure we don't exceed MAX_BEACONS_PER_SET
 	int beacons_to_send = MIN(total_beacons, MAX_BEACONS_PER_SET);
 
 	while (beacons_sent < beacons_to_send && (end - ptr) >= BEACON_DATA_SIZE) {
@@ -122,7 +122,7 @@ static void send_adv_data(void)
 	}
 
 	atomic_set(&beacon_read_index, read_index);
-	atomic_sub(&beacon_count, beacons_sent);
+	atomic_sub(beacon_count, beacons_sent);
 
 	struct bt_data ad;
 	ad.type = BT_DATA_MANUFACTURER_DATA;
@@ -134,7 +134,7 @@ static void send_adv_data(void)
 
 	int set_to_use = -1;
 	for (int i = 0; i < MAX_ADV_SETS; i++) {
-		if (!(atomic_get(&adv_set_active_bitfield) & BIT(i))) {
+		if (!(atomic_get(adv_set_active_bitfield) & BIT(i))) {
 			set_to_use = i;
 			break;
 		}
@@ -163,10 +163,10 @@ static void send_adv_data(void)
 	}
 
 	printk("Extended advertising started successfully for set %d\n", set_to_use);
-	atomic_or(&adv_set_active_bitfield, BIT(set_to_use));
+	atomic_or(adv_set_active_bitfield, BIT(set_to_use));
 	atomic_inc(&active_adv_sets);
 
-	printk("Beacons sent: %d, Remaining: %ld\n", beacons_sent, atomic_get(&beacon_count));
+	printk("Beacons sent: %d, Remaining: %ld\n", beacons_sent, atomic_get(beacon_count));
 	printk("Exiting send_adv_data\n");
 }
 
@@ -175,24 +175,21 @@ static void adv_work_handler(struct k_work *work)
 	bool should_send = false;
 
 	for (int i = 0; i < MAX_ADV_SETS; i++) {
-		if (adv_sets[i] && (atomic_get(&adv_set_active_bitfield) & BIT(i))) {
+		if (adv_sets[i] && (atomic_get(adv_set_active_bitfield) & BIT(i))) {
 			int err = bt_le_ext_adv_stop(adv_sets[i]);
 			if (err) {
 				printk("Failed to stop advertising set %d (err %d)\n", i, err);
 			} else {
 				printk("Advertising set %d stopped\n", i);
-				atomic_and(&adv_set_active_bitfield, ~BIT(i));
+				atomic_and(adv_set_active_bitfield, ~BIT(i));
 				atomic_dec(&active_adv_sets);
 				should_send = true;
 			}
 		}
 	}
 
-	if (should_send && (k_uptime_get_32() - last_send_time) >= MAX_WAIT_TIME_MS) {
-		printk("Sending due to timeout\n");
-		send_adv_data();
-	} else if (should_send) {
-		printk("Not sending: recent send occurred\n");
+	if (should_send) {
+		check_and_send();
 	}
 
 	k_work_schedule(&adv_work, K_MSEC(ADV_DURATION_MS));
