@@ -8,7 +8,7 @@
 #define ADV_DURATION_MS      1000
 #define MAX_EXT_ADV_DATA_LEN 191 // Maximum allowed for extended advertising
 #define MAX_ADV_SETS         3
-#define HEADER_SIZE          5
+#define HEADER_SIZE          4
 #define BEACON_DATA_SIZE     7
 #define TOTAL_HEADER_SIZE    (HEADER_SIZE + 2) // +2 for AD type and length
 #define MAX_BEACONS_PER_SET  ((MAX_EXT_ADV_DATA_LEN - TOTAL_HEADER_SIZE) / BEACON_DATA_SIZE)
@@ -87,11 +87,10 @@ static void send_adv_data(void)
 	uint8_t *end = ad_data + MAX_EXT_ADV_DATA_LEN;
 
 	// Custom header
-	*ptr++ = 0xFF;                                     // Manufacturer Specific Data type
-	*ptr++ = 0x19;                                     // Company ID (little-endian)
-	*ptr++ = 0xFF;                                     // Company ID (little-endian)
-	*ptr++ = 0x00;                                     // Custom identifier (first byte)
-	*ptr++ = 0x00;                                     // Custom identifier (second byte)
+	*ptr++ = 0xFF; // Manufacturer Specific Data type
+	*ptr++ = 0xFE; // Company ID (little-endian) - Reserved for development
+	*ptr++ = 0xFF; // Company ID (little-endian) - Reserved for development
+	*ptr++ = 0x00; // Custom identifier or protocol version
 	*ptr++ = (uint8_t)atomic_get(&beacon_write_index); // Sequence number
 
 	int total_beacons = atomic_get(&beacon_count);
@@ -154,7 +153,7 @@ static void send_adv_data(void)
 	// Remove the beacons we just advertised
 	atomic_sub(&beacon_count, beacons_sent);
 
-	printk("Beacons sent: %d, Remaining: %ld\n", beacons_sent, atomic_get(&beacon_count));
+	printk("Beacons available: %d, Beacons sent: %d\n", total_beacons, beacons_sent);
 	printk("Exiting send_adv_data\n");
 }
 
