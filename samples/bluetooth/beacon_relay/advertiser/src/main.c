@@ -11,7 +11,7 @@
 #define HEADER_SIZE          4
 #define BEACON_DATA_SIZE     7
 #define TOTAL_HEADER_SIZE    (HEADER_SIZE + 2)
-#define MAX_BEACONS_PER_SET  ((MAX_EXT_ADV_DATA_LEN - TOTAL_HEADER_SIZE) / BEACON_DATA_SIZE)
+#define MAX_BEACONS_PER_SET  25 // Static value, divisible by BEACON_BATCH_SIZE
 #define MAX_BEACONS          120
 #define MAX_WAIT_TIME_MS     950
 #define BEACON_BATCH_SIZE    5
@@ -61,21 +61,17 @@ static void check_and_send(void)
 	printk("check_and_send: current_time=%u, last_send_time=%u, beacon_count=%u\n",
 	       current_time, last_send_time, current_beacon_count);
 
-	if (current_beacon_count > 0) {
-		if (current_beacon_count >= MAX_BEACONS_PER_SET) {
-			printk("Sending due to full set\n");
-			send_adv_data();
-			last_send_time = current_time;
-		} else if ((current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
-			printk("Sending due to timeout (accumulated %u beacons)\n",
-			       current_beacon_count);
-			send_adv_data();
-			last_send_time = current_time;
-		} else {
-			printk("Not sending: waiting for more beacons or timeout\n");
-		}
+	if (current_beacon_count >= MAX_BEACONS_PER_SET) {
+		printk("Sending due to full set (%d beacons)\n", MAX_BEACONS_PER_SET);
+		send_adv_data();
+		last_send_time = current_time;
+	} else if (current_beacon_count >= BEACON_BATCH_SIZE &&
+		   (current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
+		printk("Sending due to timeout (%d beacons)\n", current_beacon_count);
+		send_adv_data();
+		last_send_time = current_time;
 	} else {
-		printk("Not sending: no beacons\n");
+		printk("Not sending: waiting for more beacons or timeout\n");
 	}
 }
 
@@ -112,7 +108,10 @@ static void send_adv_data(void)
 	atomic_val_t read_index = atomic_get(&beacon_read_index);
 	int beacons_sent = 0;
 
-	while (beacons_sent < total_beacons && (end - ptr) >= BEACON_DATA_SIZE) {
+	// Ensure we don't exceed MAX_BEACONS_PER_SET
+	int beacons_to_send = MIN(total_beacons, MAX_BEACONS_PER_SET);
+
+	while (beacons_sent < beacons_to_send && (end - ptr) >= BEACON_DATA_SIZE) {
 		struct beacon_info *beacon = &beacon_queue[read_index];
 
 		memcpy(ptr, beacon->addr.a.val, 6);
@@ -173,6 +172,8 @@ static void send_adv_data(void)
 
 static void adv_work_handler(struct k_work *work)
 {
+	bool should_send = false;
+
 	for (int i = 0; i < MAX_ADV_SETS; i++) {
 		if (adv_sets[i] && (atomic_get(&adv_set_active_bitfield) & BIT(i))) {
 			int err = bt_le_ext_adv_stop(adv_sets[i]);
@@ -182,15 +183,16 @@ static void adv_work_handler(struct k_work *work)
 				printk("Advertising set %d stopped\n", i);
 				atomic_and(&adv_set_active_bitfield, ~BIT(i));
 				atomic_dec(&active_adv_sets);
-
-				if ((k_uptime_get_32() - last_send_time) >= MAX_WAIT_TIME_MS) {
-					printk("Sending due to timeout\n");
-					send_adv_data();
-				} else {
-					printk("Not sending: recent send occurred\n");
-				}
+				should_send = true;
 			}
 		}
+	}
+
+	if (should_send && (k_uptime_get_32() - last_send_time) >= MAX_WAIT_TIME_MS) {
+		printk("Sending due to timeout\n");
+		send_adv_data();
+	} else if (should_send) {
+		printk("Not sending: recent send occurred\n");
 	}
 
 	k_work_schedule(&adv_work, K_MSEC(ADV_DURATION_MS));
