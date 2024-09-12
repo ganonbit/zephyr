@@ -14,11 +14,13 @@
 #define MAX_WAIT_TIME_MS     950
 #define BEACON_BATCH_SIZE    5
 
+// Data structures
 struct beacon_info {
 	bt_addr_le_t addr;
 	int8_t rssi;
 };
 
+// Static variables
 static struct bt_le_ext_adv *adv_sets[MAX_ADV_SETS];
 static struct beacon_info beacon_queue[MAX_BEACONS];
 static ATOMIC_DEFINE(beacon_count, 32);
@@ -33,8 +35,18 @@ static uint32_t last_send_time = 0;
 
 static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 
+// Function declarations
+static void add_beacon(const bt_addr_le_t *addr, int8_t rssi);
 static void send_adv_data(void);
+static void check_and_send(void);
+static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
+			 struct net_buf_simple *ad);
+static void adv_work_handler(struct k_work *work);
+static int create_adv_param(struct bt_le_ext_adv **adv);
+static int observer_start(void);
+static void bt_ready(int err);
 
+// 1. Beacon management
 static inline void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 {
 	atomic_val_t write_index = atomic_get(&beacon_write_index);
@@ -53,27 +65,7 @@ static inline void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 	}
 }
 
-static void check_and_send(void)
-{
-	uint32_t current_time = k_uptime_get_32();
-	uint32_t current_beacon_count = atomic_get(beacon_count);
-
-	if (IS_ENABLED(CONFIG_DEBUG)) {
-		printk("check_and_send: current_time=%u, last_send_time=%u, beacon_count=%u\n",
-		       current_time, last_send_time, current_beacon_count);
-	}
-
-	if (current_beacon_count >= BEACON_BATCH_SIZE &&
-	    (current_beacon_count >= MAX_BEACONS_PER_SET ||
-	     (current_time - last_send_time) >= MAX_WAIT_TIME_MS)) {
-		printk("Sending %d beacons\n", current_beacon_count);
-		send_adv_data();
-		last_send_time = current_time;
-	} else {
-		printk("Not sending: waiting for more beacons or timeout\n");
-	}
-}
-
+// 2. Bluetooth device discovery callback
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad)
 {
@@ -92,6 +84,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	}
 }
 
+// 3. Advertising data preparation and sending
 static void send_adv_data(void)
 {
 	printk("Entering send_adv_data\n");
@@ -170,6 +163,29 @@ static void send_adv_data(void)
 	printk("Exiting send_adv_data\n");
 }
 
+// 4. Periodic check and send mechanism
+static void check_and_send(void)
+{
+	uint32_t current_time = k_uptime_get_32();
+	uint32_t current_beacon_count = atomic_get(beacon_count);
+
+	if (IS_ENABLED(CONFIG_DEBUG)) {
+		printk("check_and_send: current_time=%u, last_send_time=%u, beacon_count=%u\n",
+		       current_time, last_send_time, current_beacon_count);
+	}
+
+	if (current_beacon_count >= BEACON_BATCH_SIZE &&
+	    (current_beacon_count >= MAX_BEACONS_PER_SET ||
+	     (current_time - last_send_time) >= MAX_WAIT_TIME_MS)) {
+		printk("Sending %d beacons\n", current_beacon_count);
+		send_adv_data();
+		last_send_time = current_time;
+	} else {
+		printk("Not sending: waiting for more beacons or timeout\n");
+	}
+}
+
+// 5. Advertising work handler
 static void adv_work_handler(struct k_work *work)
 {
 	bool should_send = false;
@@ -195,6 +211,7 @@ static void adv_work_handler(struct k_work *work)
 	k_work_schedule(&adv_work, K_MSEC(ADV_DURATION_MS));
 }
 
+// 6. Advertising set creation
 static int create_adv_param(struct bt_le_ext_adv **adv)
 {
 	struct bt_le_adv_param param =
@@ -211,6 +228,7 @@ static int create_adv_param(struct bt_le_ext_adv **adv)
 	return 0;
 }
 
+// 7. Bluetooth observer start
 static int observer_start(void)
 {
 	struct bt_le_scan_param scan_param = {
@@ -230,6 +248,7 @@ static int observer_start(void)
 	return 0;
 }
 
+// 8. Bluetooth ready callback
 static void bt_ready(int err)
 {
 	if (err) {
@@ -256,6 +275,7 @@ static void bt_ready(int err)
 	}
 }
 
+// 9. Main function
 int main(void)
 {
 	int err;
