@@ -11,7 +11,7 @@
 #define BEACON_DATA_SIZE     7
 #define MAX_BEACONS_PER_SET  25 // must be divisible by BEACON_BATCH_SIZE
 #define MAX_BEACONS          120
-#define MAX_WAIT_TIME_MS     950
+#define MAX_WAIT_TIME_MS     1500
 #define BEACON_BATCH_SIZE    5
 
 // Data Structures
