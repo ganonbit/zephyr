@@ -9,18 +9,18 @@
 #define MAX_EXT_ADV_DATA_LEN 191
 #define MAX_ADV_SETS         3
 #define BEACON_DATA_SIZE     7
-#define MAX_BEACONS_PER_SET  25 // Static value, divisible by BEACON_BATCH_SIZE
+#define MAX_BEACONS_PER_SET  25 // must be divisible by BEACON_BATCH_SIZE
 #define MAX_BEACONS          120
 #define MAX_WAIT_TIME_MS     950
 #define BEACON_BATCH_SIZE    5
 
-// Data structures
+// Data Structures
 struct beacon_info {
 	bt_addr_le_t addr;
 	int8_t rssi;
 };
 
-// Static variables
+// Static Variables
 static struct bt_le_ext_adv *adv_sets[MAX_ADV_SETS];
 static struct beacon_info beacon_queue[MAX_BEACONS];
 static ATOMIC_DEFINE(beacon_count, 32);
@@ -35,7 +35,7 @@ static uint32_t last_send_time = 0;
 
 static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 
-// Function declarations
+// Function Declarations
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi);
 static void send_adv_data(void);
 static void check_and_send(void);
@@ -46,7 +46,7 @@ static int create_adv_param(struct bt_le_ext_adv **adv);
 static int observer_start(void);
 static void bt_ready(int err);
 
-// 1. Beacon management
+// Beacon Management
 static inline void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 {
 	atomic_val_t write_index = atomic_get(&beacon_write_index);
@@ -65,7 +65,7 @@ static inline void add_beacon(const bt_addr_le_t *addr, int8_t rssi)
 	}
 }
 
-// 2. Bluetooth device discovery callback
+// Bluetooth Device Discovery Callback
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad)
 {
@@ -84,7 +84,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	}
 }
 
-// 3. Advertising data preparation and sending
+// Advertising Data Preparation and Sending
 static void send_adv_data(void)
 {
 	printk("Entering send_adv_data\n");
@@ -92,15 +92,36 @@ static void send_adv_data(void)
 	uint8_t *ptr = ad_data;
 	uint8_t *end = ad_data + MAX_EXT_ADV_DATA_LEN;
 
-	*ptr++ = 0xFF;                                     // Manufacturer specific data
-	*ptr++ = 0xFE;                                     // Company ID (Debug/Test - LSB)
-	*ptr++ = 0xFF;                                     // Company ID (Debug/Test - MSB)
-	*ptr++ = 0x00;                                     // Custom identifier or flags
+	*ptr++ = 0x62;                                     // Company ID (MOKO TECHNOLOGY Ltd - LSB)
+	*ptr++ = 0x0A;                                     // Company ID (MOKO TECHNOLOGY Ltd - MSB)
+	*ptr++ = 0x00;                                     // Breakpoint
 	*ptr++ = (uint8_t)atomic_get(&beacon_write_index); // Sequence number
+
+	printk("Company ID bytes: 0x%02X 0x%02X\n", *(ptr - 4), *(ptr - 3));
+	printk("Sequence number: 0x%02X\n", *(ptr - 1));
+
+	printk("First 10 bytes of ad_data: ");
+	for (int i = 0; i < 10 && i < (ptr - ad_data); i++) {
+		printk("0x%02X ", ad_data[i]);
+	}
+	printk("\n");
 
 	int total_beacons = atomic_get(beacon_count);
 	atomic_val_t read_index = atomic_get(&beacon_read_index);
 	int beacons_sent = 0;
+
+	int set_to_use = -1;
+	for (int i = 0; i < MAX_ADV_SETS; i++) {
+		if (!(atomic_get(adv_set_active_bitfield) & BIT(i))) {
+			set_to_use = i;
+			break;
+		}
+	}
+
+	if (set_to_use == -1) {
+		printk("No inactive advertising sets available\n");
+		return;
+	}
 
 	int beacons_to_send = MIN(total_beacons, MAX_BEACONS_PER_SET);
 
@@ -117,53 +138,37 @@ static void send_adv_data(void)
 	atomic_set(&beacon_read_index, read_index);
 	atomic_sub(beacon_count, beacons_sent);
 
-	struct bt_data ad;
-	ad.type = BT_DATA_MANUFACTURER_DATA;
-	ad.data_len = ptr - ad_data;
-	ad.data = ad_data;
+	struct bt_data ad = {
+		.type = BT_DATA_MANUFACTURER_DATA, .data_len = ptr - ad_data, .data = ad_data};
 
-	printk("Setting extended advertising data, length: %d, beacons: %d\n", ad.data_len,
-	       beacons_sent);
-
-	int set_to_use = -1;
-	for (int i = 0; i < MAX_ADV_SETS; i++) {
-		if (!(atomic_get(adv_set_active_bitfield) & BIT(i))) {
-			set_to_use = i;
-			break;
-		}
+	printk("Advertisement data length: %u\n", ad.data_len);
+	printk("First 10 bytes of final ad data: ");
+	for (int i = 0; i < 10 && i < ad.data_len; i++) {
+		printk("0x%02X ", ad.data[i]);
 	}
-
-	if (set_to_use == -1) {
-		printk("No inactive advertising sets available\n");
-		printk("Exiting send_adv_data\n");
-		return;
-	}
+	printk("\n");
 
 	err = bt_le_ext_adv_set_data(adv_sets[set_to_use], &ad, 1, NULL, 0);
 	if (err) {
 		printk("Failed to set advertising data for set %d (err %d)\n", set_to_use, err);
-		printk("Exiting send_adv_data\n");
 		return;
 	}
 
-	err = bt_le_ext_adv_start(adv_sets[set_to_use],
-				  BT_LE_EXT_ADV_START_PARAM(ADV_DURATION_MS, 0));
-	if (err) {
-		printk("Failed to start extended advertising for set %d (err %d)\n", set_to_use,
-		       err);
-		printk("Exiting send_adv_data\n");
-		return;
-	}
+    err = bt_le_ext_adv_start(adv_sets[set_to_use], BT_LE_EXT_ADV_START_PARAM(ADV_DURATION_MS, 0));
+    if (err) {
+	    printk("Failed to start extended advertising for set %d (err %d)\n", set_to_use, err);
+	    return;
+    }
 
-	printk("Extended advertising started successfully for set %d\n", set_to_use);
-	atomic_or(adv_set_active_bitfield, BIT(set_to_use));
-	atomic_inc(&active_adv_sets);
+    printk("Extended advertising started successfully for set %d\n", set_to_use);
+    atomic_or(adv_set_active_bitfield, BIT(set_to_use));
+    atomic_inc(&active_adv_sets);
 
-	printk("Beacons sent: %d, Remaining: %ld\n", beacons_sent, atomic_get(beacon_count));
-	printk("Exiting send_adv_data\n");
+    printk("Beacons sent: %d, Remaining: %ld\n", beacons_sent, atomic_get(beacon_count));
+    printk("Exiting send_adv_data\n");
 }
 
-// 4. Periodic check and send mechanism
+// Periodic Check and Send Mechanism
 static void check_and_send(void)
 {
 	uint32_t current_time = k_uptime_get_32();
@@ -174,18 +179,30 @@ static void check_and_send(void)
 		       current_time, last_send_time, current_beacon_count);
 	}
 
-	if (current_beacon_count >= BEACON_BATCH_SIZE &&
-	    (current_beacon_count >= MAX_BEACONS_PER_SET ||
-	     (current_time - last_send_time) >= MAX_WAIT_TIME_MS)) {
-		printk("Sending %d beacons\n", current_beacon_count);
-		send_adv_data();
+	if (current_beacon_count >= BEACON_BATCH_SIZE ||
+	    (current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
+
+		int available_sets = MAX_ADV_SETS - atomic_get(&active_adv_sets);
+		int sets_to_use = MIN(available_sets, (current_beacon_count + MAX_BEACONS_PER_SET -
+						       1) / MAX_BEACONS_PER_SET);
+
+		for (int i = 0; i < sets_to_use; i++) {
+			printk("Sending beacons using set %d\n", i);
+			send_adv_data();
+
+			// Break if we've sent all beacons
+			if (atomic_get(beacon_count) == 0) {
+				break;
+			}
+		}
+
 		last_send_time = current_time;
 	} else {
 		printk("Not sending: waiting for more beacons or timeout\n");
 	}
 }
 
-// 5. Advertising work handler
+// Advertising Work Handler
 static void adv_work_handler(struct k_work *work)
 {
 	bool should_send = false;
@@ -211,7 +228,7 @@ static void adv_work_handler(struct k_work *work)
 	k_work_schedule(&adv_work, K_MSEC(ADV_DURATION_MS));
 }
 
-// 6. Advertising set creation
+// Advertising Set Creation
 static int create_adv_param(struct bt_le_ext_adv **adv)
 {
 	struct bt_le_adv_param param =
@@ -228,7 +245,7 @@ static int create_adv_param(struct bt_le_ext_adv **adv)
 	return 0;
 }
 
-// 7. Bluetooth observer start
+// Bluetooth Observer Start
 static int observer_start(void)
 {
 	struct bt_le_scan_param scan_param = {
@@ -248,7 +265,7 @@ static int observer_start(void)
 	return 0;
 }
 
-// 8. Bluetooth ready callback
+// Bluetooth Ready Callback
 static void bt_ready(int err)
 {
 	if (err) {
@@ -275,7 +292,7 @@ static void bt_ready(int err)
 	}
 }
 
-// 9. Main function
+// Main Function
 int main(void)
 {
 	int err;
