@@ -15,7 +15,7 @@
 #define ADV_DURATION_MS      2000
 #define MAX_WAIT_TIME_MS     3000
 #define RECOVERY_TIMEOUT_MS  5000
-#define TEST_DEVICE_ADDR     {0xF6, 0xE5, 0xD4, 0xC3, 0xB2, 0xA1}
+#define TEST_DEVICE_ADDR      {0xF6, 0xE5, 0xD4, 0xC3, 0xB2, 0xA1}
 #define TIME_THRESHOLD       5000
 #define INITIAL_TTL           3
 #define SEQUENCE_HISTORY_SIZE 10
@@ -30,6 +30,7 @@ struct beacon_info {
 	uint8_t last_sequence;
 	uint8_t sequence_history[SEQUENCE_HISTORY_SIZE];
 	uint8_t history_index;
+	int16_t temperature;
 };
 
 // Static Variables
@@ -45,9 +46,9 @@ static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 
 // Function Declarations
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl,
-				 uint8_t sequence);
+				 uint8_t sequence, int16_t temperature);
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl, uint8_t sequence,
-		       bool is_test_device);
+		       int16_t temperature, bool is_test_device);
 static int send_adv_data(void);
 static void check_and_send(void);
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
@@ -63,7 +64,7 @@ static void cleanup_old_beacons(void);
 
 // Beacon Management
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl,
-				 uint8_t sequence)
+				 uint8_t sequence, int16_t temperature)
 {
 	uint32_t current_time = k_uptime_get_32();
 	int empty_slot = -1;
@@ -92,6 +93,7 @@ static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
 		// Update existing beacon
 		beacon_queue[existing_slot].last_seen = current_time;
 		beacon_queue[existing_slot].ttl = ttl;
+		beacon_queue[existing_slot].temperature = temperature; // Update temperature
 		update_sequence_history(&beacon_queue[existing_slot], sequence);
 		return existing_slot; // Return existing slot
 	}
@@ -99,7 +101,8 @@ static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
 	// Add new beacon if space available
 	if (empty_slot != -1) {
 		memcpy(&beacon_queue[empty_slot].addr, addr, sizeof(bt_addr_le_t));
-		beacon_queue[empty_slot].rssi = rssi; // Set initial RSSI
+		beacon_queue[empty_slot].rssi = rssi;               // Set initial RSSI
+		beacon_queue[empty_slot].temperature = temperature; // Set initial temperature
 		beacon_queue[empty_slot].last_seen = current_time;
 		beacon_queue[empty_slot].is_valid = true;
 		beacon_queue[empty_slot].ttl = ttl;
@@ -114,14 +117,15 @@ static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
 }
 
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl, uint8_t sequence,
-		       bool is_test_device)
+		       int16_t temperature, bool is_test_device)
 {
-	int index = find_or_update_beacon(addr, rssi, ttl, sequence);
+	int index = find_or_update_beacon(addr, rssi, ttl, sequence, temperature);
 	if (index >= 0) {
 		char addr_str[BT_ADDR_LE_STR_LEN];
 		bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-		printk("Beacon updated/added: Address: %s, RSSI: %d, Index: %d\n", addr_str, rssi,
-		       index);
+		printk("Beacon updated/added: Address: %s (0x%02x), RSSI: %d, Temperature: %d, "
+		       "Index: %d\n",
+		       addr_str, addr->a.val[5], rssi, temperature, index);
 
 		if (IS_ENABLED(CONFIG_DEBUG)) {
 			printk("Beacon queue status:\n");
@@ -151,6 +155,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 
 	uint8_t ttl = INITIAL_TTL;
 	uint8_t sequence = 0;
+	int16_t temperature = 0; // Initialize temperature to 0
 
 	// Check if this is a relay packet by looking for our custom data
 	struct net_buf_simple_state state;
@@ -163,11 +168,16 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 		if (ttl > 0) {
 			ttl--; // Decrement TTL for relaying
 		}
+	} else if (data[0] == 0x16) { // Eddystone TLM frame
+		// Extract temperature from Eddystone TLM frame
+		temperature = (int16_t)((data[4] << 8) | data[5]);
+		printk("Extracted temperature: %d (0x%04X) from Eddystone TLM frame\n", temperature,
+		       temperature);
 	}
 
 	net_buf_simple_restore(ad, &state);
 
-	add_beacon(addr, rssi, ttl, sequence, false); // Pass false for regular beacons
+	add_beacon(addr, rssi, ttl, sequence, temperature, false); // Pass false for regular beacons
 
 	if (atomic_inc(&beacons_since_last_check) >= BEACON_BATCH_SIZE) {
 		printk("Calling check_and_send after adding beacon batch\n");
@@ -220,22 +230,36 @@ static int send_adv_data(void)
 		printk("No inactive advertising sets available\n");
 		return -EBUSY;
 	}
-
 	// Add test device
-	if ((end - ptr) >= BEACON_DATA_SIZE) {
+	if ((end - ptr) >= (BEACON_DATA_SIZE + 2)) { // +2 for temperature bytes
+		printk("Debug: Adding test device\n");
 		uint8_t test_addr[] = TEST_DEVICE_ADDR;
 		memcpy(ptr, test_addr, 6);
 		ptr += 6;
-		*ptr++ = (int8_t)(sys_rand32_get() % 51 - 50); // Random RSSI between -50 and 0
-		uint8_t test_ttl = INITIAL_TTL;                // Set TTL for the test device
-		add_beacon((bt_addr_le_t *)test_addr, *(ptr - 1), test_ttl, global_sequence,
+		*ptr++ = -20;                   // Static RSSI of -20
+		uint8_t test_ttl = INITIAL_TTL; // Set TTL for the test device
+		uint16_t test_temperature = 6900;
+		*ptr++ = test_ttl;
+
+		// When adding to the packet:
+		*ptr++ = test_temperature & 0xFF;        // Low byte
+		*ptr++ = (test_temperature >> 8) & 0xFF; // High byte
+
+		printk("Debug: Test device data - RSSI: %d, TTL: %d, Temperature: %d\n", -20,
+		       test_ttl, test_temperature);
+
+		add_beacon((bt_addr_le_t *)test_addr, *(ptr - 4), test_ttl, global_sequence,
+			   test_temperature,
 			   true); // Pass true for test device
 		test_device_added = true;
+		printk("Debug: Test device added successfully\n");
+	} else {
+		printk("Debug: Not enough space to add test device\n");
 	}
 
 	// Send beacons from the queue
 	for (int i = 0; i < MAX_BEACONS && beacons_sent < MAX_BEACONS_PER_SET &&
-			(end - ptr) >= (BEACON_DATA_SIZE + 1); // +1 for TTL
+			(end - ptr) >= BEACON_DATA_SIZE;
 	     i++) {
 		if (beacon_queue[i].is_valid &&
 		    (current_time - beacon_queue[i].last_seen) >= TIME_THRESHOLD &&
@@ -244,17 +268,22 @@ static int send_adv_data(void)
 			ptr += 6;
 			*ptr++ = beacon_queue[i].rssi;
 			*ptr++ = beacon_queue[i].ttl; // Add TTL to the packet
+
+			// Add temperature (high byte)
+			*ptr++ = (beacon_queue[i].temperature >> 8) & 0xFF;
+			// Add temperature (low byte)
+			*ptr++ = beacon_queue[i].temperature & 0xFF;
 			beacons_sent++;
 
 			// Mark the beacon as invalid (effectively removing it from the queue)
 			beacon_queue[i].is_valid = false;
 			printk("Beacon sent: Address: %02X:%02X:%02X:%02X:%02X:%02X, RSSI: %d, "
-			       "TTL: %d, Last seen: %u\n",
+			       "TTL: %d, Temperature: %d, Last seen: %u\n",
 			       beacon_queue[i].addr.a.val[5], beacon_queue[i].addr.a.val[4],
 			       beacon_queue[i].addr.a.val[3], beacon_queue[i].addr.a.val[2],
 			       beacon_queue[i].addr.a.val[1], beacon_queue[i].addr.a.val[0],
 			       beacon_queue[i].rssi, beacon_queue[i].ttl,
-			       beacon_queue[i].last_seen);
+			       beacon_queue[i].temperature, beacon_queue[i].last_seen);
 		}
 	}
 
