@@ -286,8 +286,8 @@ static int send_adv_data(void)
 		ptr += 6;
 		*ptr++ = -20;                   // Static RSSI of -20
 		uint8_t test_ttl = INITIAL_TTL;
-		uint16_t test_temperature = 6900;
-		uint16_t test_voltage = 50000;
+		uint16_t test_temperature = 17664;
+		uint16_t test_voltage = 5000;
 		*ptr++ = test_ttl;
 
 		// When adding to the packet:
