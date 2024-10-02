@@ -31,6 +31,7 @@ struct beacon_info {
 	uint8_t sequence_history[SEQUENCE_HISTORY_SIZE];
 	uint8_t history_index;
 	int16_t temperature;
+	uint16_t voltage;
 };
 
 // Static Variables
@@ -46,9 +47,9 @@ static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 
 // Function Declarations
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl,
-				 uint8_t sequence, int16_t temperature);
+				 uint8_t sequence, int16_t temperature, uint16_t voltage);
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl, uint8_t sequence,
-		       int16_t temperature, bool is_test_device);
+		       int16_t temperature, uint16_t voltage, bool is_test_device);
 static int send_adv_data(void);
 static void check_and_send(void);
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
@@ -64,7 +65,7 @@ static void cleanup_old_beacons(void);
 
 // Beacon Management
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl,
-				 uint8_t sequence, int16_t temperature)
+				 uint8_t sequence, int16_t temperature, uint16_t voltage)
 {
 	uint32_t current_time = k_uptime_get_32();
 	int empty_slot = -1;
@@ -93,16 +94,18 @@ static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
 		// Update existing beacon
 		beacon_queue[existing_slot].last_seen = current_time;
 		beacon_queue[existing_slot].ttl = ttl;
-		beacon_queue[existing_slot].temperature = temperature; // Update temperature
+		beacon_queue[existing_slot].temperature = temperature;
+		beacon_queue[existing_slot].voltage = voltage;
 		update_sequence_history(&beacon_queue[existing_slot], sequence);
-		return existing_slot; // Return existing slot
+		return existing_slot;
 	}
 
 	// Add new beacon if space available
 	if (empty_slot != -1) {
 		memcpy(&beacon_queue[empty_slot].addr, addr, sizeof(bt_addr_le_t));
-		beacon_queue[empty_slot].rssi = rssi;               // Set initial RSSI
-		beacon_queue[empty_slot].temperature = temperature; // Set initial temperature
+		beacon_queue[empty_slot].rssi = rssi;
+		beacon_queue[empty_slot].temperature = temperature;
+		beacon_queue[empty_slot].voltage = voltage;
 		beacon_queue[empty_slot].last_seen = current_time;
 		beacon_queue[empty_slot].is_valid = true;
 		beacon_queue[empty_slot].ttl = ttl;
@@ -117,15 +120,16 @@ static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t 
 }
 
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t ttl, uint8_t sequence,
-		       int16_t temperature, bool is_test_device)
+		       int16_t temperature, uint16_t voltage, bool is_test_device)
 {
-	int index = find_or_update_beacon(addr, rssi, ttl, sequence, temperature);
+	int index = find_or_update_beacon(addr, rssi, ttl, sequence, temperature, voltage);
 	if (index >= 0) {
 		char addr_str[BT_ADDR_LE_STR_LEN];
 		bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
-		printk("Beacon updated/added: Address: %s (0x%02x), RSSI: %d, Temperature: %d, "
-		       "Index: %d\n",
-		       addr_str, addr->a.val[5], rssi, temperature, index);
+		// printk("Beacon updated/added: Address: %s (0x%02x), RSSI: %d,"
+		//        "Temperature: %d, Voltage: %d,"
+		//        "Index: %d\n",
+		//        addr_str, addr->a.val[5], rssi, temperature, voltage, index);
 
 		if (IS_ENABLED(CONFIG_DEBUG)) {
 			printk("Beacon queue status:\n");
@@ -155,29 +159,73 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 
 	uint8_t ttl = INITIAL_TTL;
 	uint8_t sequence = 0;
-	int16_t temperature = 0; // Initialize temperature to 0
+	int16_t temperature = 0;
+	uint16_t voltage = 0;
 
 	// Check if this is a relay packet by looking for our custom data
 	struct net_buf_simple_state state;
 	net_buf_simple_save(ad, &state);
+	printk("Debug: Saved net_buf_simple state. Offset: %u, Length: %u\n", state.offset,
+	       state.len);
 
-	uint8_t *data = net_buf_simple_pull_mem(ad, 2); // Skip company ID
-	if (data[0] == 0x08) {                          // Our custom identifier
-		sequence = net_buf_simple_pull_u8(ad);  // Extract sequence number
-		ttl = net_buf_simple_pull_u8(ad);       // Extract TTL
-		if (ttl > 0) {
-			ttl--; // Decrement TTL for relaying
+	// Debug: Print entire advertisement data
+	printk("Debug: Advertisement data (%d bytes):", ad->len);
+	for (int i = 0; i < ad->len; i++) {
+		printk(" %02X", ad->data[i]);
+	}
+	printk("\n");
+
+	while (ad->len > 1) {
+		uint8_t len = net_buf_simple_pull_u8(ad);
+		uint8_t type = net_buf_simple_pull_u8(ad);
+
+		printk("Debug: AD type: 0x%02X, length: %d\n", type, len);
+
+		if (type == BT_DATA_MANUFACTURER_DATA && len >= 3) {
+			uint8_t *data = net_buf_simple_pull_mem(ad, len - 1);
+			printk("Debug: Manufacturer data: %02X %02X %02X\n", data[0], data[1],
+			       data[2]);
+			if (data[0] == 0x59 && data[1] == 0x00 && data[2] == 0x08) {
+				printk("Debug: Found custom identifier\n");
+				sequence = data[3];
+				ttl = data[4];
+				if (ttl > 0) {
+					ttl--;
+				}
+				printk("Debug: Sequence: %d, TTL: %d\n", sequence, ttl);
+			}
+		} else if (type == BT_DATA_SVC_DATA16 && len >= 11) {
+			uint8_t *data = net_buf_simple_pull_mem(ad, len - 1);
+			if (data[0] == 0xAA && data[1] == 0xFE && data[2] == 0x20) {
+				char addr_str[BT_ADDR_LE_STR_LEN];
+				bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+				printk("Debug: Found Eddystone TLM frame from device %s\n",
+				       addr_str);
+				printk("Debug: TLM frame data for %s:", addr_str);
+				for (int i = 0; i < len - 1; i++) {
+					printk(" %02X", data[i]);
+				}
+				printk("\n");
+				voltage = (data[4] << 8) | data[5];
+				temperature = (data[6] << 8) | data[7];
+
+				printk("Debug: Parsed TLM data for %s - Temperature: %.2d C, "
+				       "Voltage: %d mV\n",
+				       addr_str, temperature, voltage);
+			}
+		} else {
+			net_buf_simple_pull_mem(ad, len - 1);
 		}
-	} else if (data[0] == 0x16) { // Eddystone TLM frame
-		// Extract temperature from Eddystone TLM frame
-		temperature = (int16_t)((data[4] << 8) | data[5]);
-		printk("Extracted temperature: %d (0x%04X) from Eddystone TLM frame\n", temperature,
-		       temperature);
 	}
 
 	net_buf_simple_restore(ad, &state);
 
-	add_beacon(addr, rssi, ttl, sequence, temperature, false); // Pass false for regular beacons
+	printk("Debug: Adding beacon in device_found - Address: %02X:%02X:%02X:%02X:%02X:%02X, "
+	       "RSSI: %d, TTL: %d, Sequence: %d, Temperature: %d, Voltage: %d\n",
+	       addr->a.val[5], addr->a.val[4], addr->a.val[3], addr->a.val[2], addr->a.val[1],
+	       addr->a.val[0], rssi, ttl, sequence, temperature, voltage);
+	add_beacon(addr, rssi, ttl, sequence, temperature, voltage, false);
+	printk("Debug: Beacon added successfully\n");
 
 	if (atomic_inc(&beacons_since_last_check) >= BEACON_BATCH_SIZE) {
 		printk("Calling check_and_send after adding beacon batch\n");
@@ -231,26 +279,29 @@ static int send_adv_data(void)
 		return -EBUSY;
 	}
 	// Add test device
-	if ((end - ptr) >= (BEACON_DATA_SIZE + 2)) { // +2 for temperature bytes
+	if ((end - ptr) >= (BEACON_DATA_SIZE + 4)) { // +4 for temperature and voltage bytes
 		printk("Debug: Adding test device\n");
 		uint8_t test_addr[] = TEST_DEVICE_ADDR;
 		memcpy(ptr, test_addr, 6);
 		ptr += 6;
 		*ptr++ = -20;                   // Static RSSI of -20
-		uint8_t test_ttl = INITIAL_TTL; // Set TTL for the test device
+		uint8_t test_ttl = INITIAL_TTL;
 		uint16_t test_temperature = 6900;
+		uint16_t test_voltage = 50000;
 		*ptr++ = test_ttl;
 
 		// When adding to the packet:
-		*ptr++ = test_temperature & 0xFF;        // Low byte
-		*ptr++ = (test_temperature >> 8) & 0xFF; // High byte
+		*ptr++ = test_temperature & 0xFF;        // temperature low byte
+		*ptr++ = (test_temperature >> 8) & 0xFF; // temperature high byte
+		*ptr++ = test_voltage & 0xFF;            // voltage low byte
+		*ptr++ = (test_voltage >> 8) & 0xFF;     // voltage high byte
 
-		printk("Debug: Test device data - RSSI: %d, TTL: %d, Temperature: %d\n", -20,
-		       test_ttl, test_temperature);
+		printk("Debug: Test device data - RSSI: %d, TTL: %d, Temperature: %d, Voltage: "
+		       "%d\n",
+		       -20, test_ttl, test_temperature, test_voltage);
 
 		add_beacon((bt_addr_le_t *)test_addr, *(ptr - 4), test_ttl, global_sequence,
-			   test_temperature,
-			   true); // Pass true for test device
+			   test_temperature, test_voltage, true); // Pass true for test device
 		test_device_added = true;
 		printk("Debug: Test device added successfully\n");
 	} else {
@@ -267,23 +318,23 @@ static int send_adv_data(void)
 			memcpy(ptr, beacon_queue[i].addr.a.val, 6);
 			ptr += 6;
 			*ptr++ = beacon_queue[i].rssi;
-			*ptr++ = beacon_queue[i].ttl; // Add TTL to the packet
-
-			// Add temperature (high byte)
-			*ptr++ = (beacon_queue[i].temperature >> 8) & 0xFF;
-			// Add temperature (low byte)
+			*ptr++ = beacon_queue[i].ttl;
 			*ptr++ = beacon_queue[i].temperature & 0xFF;
+			*ptr++ = (beacon_queue[i].temperature >> 8) & 0xFF;
+			*ptr++ = beacon_queue[i].voltage & 0xFF;
+			*ptr++ = (beacon_queue[i].voltage >> 8) & 0xFF;
 			beacons_sent++;
 
 			// Mark the beacon as invalid (effectively removing it from the queue)
 			beacon_queue[i].is_valid = false;
 			printk("Beacon sent: Address: %02X:%02X:%02X:%02X:%02X:%02X, RSSI: %d, "
-			       "TTL: %d, Temperature: %d, Last seen: %u\n",
+			       "TTL: %d, Temperature: %d, Voltage: %d, Last seen: %u\n",
 			       beacon_queue[i].addr.a.val[5], beacon_queue[i].addr.a.val[4],
 			       beacon_queue[i].addr.a.val[3], beacon_queue[i].addr.a.val[2],
 			       beacon_queue[i].addr.a.val[1], beacon_queue[i].addr.a.val[0],
 			       beacon_queue[i].rssi, beacon_queue[i].ttl,
-			       beacon_queue[i].temperature, beacon_queue[i].last_seen);
+			       beacon_queue[i].temperature, beacon_queue[i].voltage,
+			       beacon_queue[i].last_seen);
 		}
 	}
 
