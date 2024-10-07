@@ -9,12 +9,12 @@
 #define MAX_EXT_ADV_DATA_LEN 191
 #define MAX_ADV_SETS          2
 #define MAX_BEACONS          100
-#define MAX_BEACONS_PER_SET  24
+#define MAX_BEACONS_PER_SET   18
 #define BEACON_BATCH_SIZE    3
 #define BEACON_DATA_SIZE      7 // 6 bytes for address + 1 byte for RSSI
 #define ADV_DURATION_MS      2000
 #define MAX_WAIT_TIME_MS     3000
-#define RECOVERY_TIMEOUT_MS  5000
+#define RECOVERY_TIMEOUT_MS   10000
 #define TEST_DEVICE_ADDR      {0xF6, 0xE5, 0xD4, 0xC3, 0xB2, 0xA1}
 #define TIME_THRESHOLD       5000
 #define INITIAL_TTL           3
@@ -278,13 +278,14 @@ static int send_adv_data(void)
 		printk("No inactive advertising sets available\n");
 		return -EBUSY;
 	}
+
 	// Add test device
 	if ((end - ptr) >= (BEACON_DATA_SIZE + 4)) { // +4 for temperature and voltage bytes
 		printk("Debug: Adding test device\n");
 		uint8_t test_addr[] = TEST_DEVICE_ADDR;
 		memcpy(ptr, test_addr, 6);
 		ptr += 6;
-		*ptr++ = -20;                   // Static RSSI of -20
+		*ptr++ = -20; // Static RSSI of -20
 		uint8_t test_ttl = INITIAL_TTL;
 		uint16_t test_temperature = 17664;
 		uint16_t test_voltage = 5000;
@@ -347,21 +348,23 @@ static int send_adv_data(void)
 		return err;
 	}
 
-    err = bt_le_ext_adv_start(adv_sets[set_to_use], BT_LE_EXT_ADV_START_PARAM(ADV_DURATION_MS, 0));
-    if (err) {
-	    printk("Failed to start extended advertising for set %d (err %d)\n", set_to_use, err);
-	    return err;
-    }
+	err = bt_le_ext_adv_start(adv_sets[set_to_use],
+				  BT_LE_EXT_ADV_START_PARAM(ADV_DURATION_MS, 0));
+	if (err) {
+		printk("Failed to start extended advertising for set %d (err %d)\n", set_to_use,
+		       err);
+		return err;
+	}
 
-    printk("Extended advertising started successfully for set %d\n", set_to_use);
-    atomic_or(adv_set_active_bitfield, BIT(set_to_use));
-    atomic_inc(&active_adv_sets);
+	printk("Extended advertising started successfully for set %d\n", set_to_use);
+	atomic_or(adv_set_active_bitfield, BIT(set_to_use));
+	atomic_inc(&active_adv_sets);
 
-    printk("Beacons sent: %d, Test device added: %s\n", beacons_sent,
-	   test_device_added ? "Yes" : "No");
-    printk("Exiting send_adv_data\n");
+	printk("Beacons sent: %d, Test device added: %s\n", beacons_sent,
+	       test_device_added ? "Yes" : "No");
+	printk("Exiting send_adv_data\n");
 
-    return 0;
+	return 0;
 }
 
 // Periodic Check and Send Mechanism
@@ -377,11 +380,12 @@ static void check_and_send(void)
 	// Call cleanup_old_beacons to remove old entries
 	cleanup_old_beacons();
 
+	// Ensure we are not sending too frequently
 	if ((current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
 		int err = send_adv_data();
 		if (err == 0) {
 			atomic_set(&last_successful_operation, current_time);
-			last_send_time = current_time;
+			last_send_time = current_time; // Update last send time only on success
 		} else if (err == -EBUSY) {
 			printk("All advertising sets are busy. Waiting for sets to become "
 			       "available.\n");
