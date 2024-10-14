@@ -11,7 +11,7 @@
 #define MAX_BEACONS          100
 #define MAX_BEACONS_PER_SET   15
 #define BEACON_BATCH_SIZE    3
-#define BEACON_DATA_SIZE      7 // 6 bytes for address + 1 byte for RSSI
+#define BEACON_DATA_SIZE      7
 #define ADV_DURATION_MS      2000
 #define MAX_WAIT_TIME_MS     3000
 #define RECOVERY_TIMEOUT_MS   10000
@@ -20,7 +20,6 @@
 #define INITIAL_TTL           3
 #define SEQUENCE_HISTORY_SIZE 30
 
-// Data Structures
 struct beacon_info {
 	bt_addr_le_t addr;
 	int8_t rssi;
@@ -33,7 +32,6 @@ struct beacon_info {
 	uint16_t voltage;
 };
 
-// Static Variables
 static struct bt_le_ext_adv *adv_sets[MAX_ADV_SETS];
 static struct beacon_info beacon_queue[MAX_BEACONS];
 static atomic_t active_adv_sets = ATOMIC_INIT(0);
@@ -46,7 +44,6 @@ static uint8_t ad_data[MAX_EXT_ADV_DATA_LEN];
 static uint8_t global_sequence = 0;
 static uint8_t advertising_ttl = INITIAL_TTL; // Initialize global TTL
 
-// Function Declarations
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t sequence,
 				 int16_t temperature, uint16_t voltage);
 static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t sequence, int16_t temperature,
@@ -65,7 +62,6 @@ static bool is_duplicate_sequence(struct beacon_info *beacon, uint8_t sequence);
 static void update_sequence_history(struct beacon_info *beacon, uint8_t sequence);
 static void cleanup_old_beacons(void);
 
-// Beacon Management
 static int find_or_update_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t sequence,
 				 int16_t temperature, uint16_t voltage)
 {
@@ -160,7 +156,6 @@ static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t sequence, 
 	}
 }
 
-// Bluetooth Device Discovery Callback
 static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			 struct net_buf_simple *ad)
 {
@@ -234,7 +229,6 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	}
 }
 
-// Advertising Data Preparation and Sending
 static int send_adv_data(void)
 {
 	int err;
@@ -359,7 +353,6 @@ static int send_adv_data(void)
 	return 0;
 }
 
-// Periodic Check and Send Mechanism
 static void check_and_send(void)
 {
 	uint32_t current_time = k_uptime_get_32();
@@ -409,7 +402,6 @@ static void check_and_send(void)
 	}
 }
 
-// Advertising Work Handler
 static void adv_work_handler(struct k_work *work)
 {
 	bool should_send = false;
@@ -435,7 +427,6 @@ static void adv_work_handler(struct k_work *work)
 	k_work_schedule(&adv_work, K_MSEC(ADV_DURATION_MS));
 }
 
-// Advertising Set Creation
 static int create_adv_param(struct bt_le_ext_adv **adv)
 {
 	struct bt_le_adv_param param =
@@ -452,7 +443,6 @@ static int create_adv_param(struct bt_le_ext_adv **adv)
 	return 0;
 }
 
-// Bluetooth Observer Start
 static int observer_start(void)
 {
 	struct bt_le_scan_param scan_param = {
@@ -472,7 +462,6 @@ static int observer_start(void)
 	return 0;
 }
 
-// Bluetooth Ready Callback
 static void bt_ready(int err)
 {
 	if (err) {
@@ -534,7 +523,6 @@ static void recover_from_hang(void)
 	printk("Recovery attempt completed\n");
 }
 
-// Add a function to check if a sequence number has been seen recently
 static bool is_duplicate_sequence(struct beacon_info *beacon, uint8_t sequence)
 {
 	if (sequence == beacon->last_sequence) {
@@ -548,7 +536,6 @@ static bool is_duplicate_sequence(struct beacon_info *beacon, uint8_t sequence)
 	return false;
 }
 
-// Add a function to update the sequence history
 static void update_sequence_history(struct beacon_info *beacon, uint8_t sequence)
 {
 	beacon->last_sequence = sequence;
@@ -556,7 +543,6 @@ static void update_sequence_history(struct beacon_info *beacon, uint8_t sequence
 	beacon->history_index = (beacon->history_index + 1) % SEQUENCE_HISTORY_SIZE;
 }
 
-// Add a function to periodically clean up old beacons
 static void cleanup_old_beacons(void)
 {
 	for (int i = 0; i < MAX_BEACONS; i++) {
@@ -571,7 +557,6 @@ static void cleanup_old_beacons(void)
 	}
 }
 
-// Main Function
 int main(void)
 {
 	int err;
