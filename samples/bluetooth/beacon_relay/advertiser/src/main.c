@@ -137,8 +137,6 @@ static void add_beacon(const bt_addr_le_t *addr, int8_t rssi, uint8_t sequence, 
 		update_sequence_history(&beacon_queue[index], sequence);
 	} else {
 		// If the beacon does not exist, it means we have an empty slot
-		// The index returned by find_or_update_beacon should indicate where to add the new
-		// beacon
 		int new_index = -index;
 		if (new_index != -1) {
 			memcpy(&beacon_queue[new_index].addr, addr, sizeof(bt_addr_le_t));
@@ -168,7 +166,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	uint8_t sequence = 0;
 	int16_t temperature = 0;
 	uint16_t voltage = 0;
-	uint8_t incoming_ttl = 0; // Variable to hold incoming TTL
+	uint8_t incoming_ttl = 0;
 
 	// Check if this is a relay packet by looking for our custom data
 	struct net_buf_simple_state state;
@@ -182,7 +180,7 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 			uint8_t *data = net_buf_simple_pull_mem(ad, len - 1);
 			if (data[0] == 0x59 && data[1] == 0x00 && data[2] == 0x08) {
 				printk("Debug: Found custom identifier\n");
-				incoming_ttl = data[4]; // Assume TTL is the next byte in the packet
+				incoming_ttl = data[4];
 			}
 		} else if (type == BT_DATA_SVC_DATA16 && len >= 11) {
 			uint8_t *data = net_buf_simple_pull_mem(ad, len - 1);
@@ -209,18 +207,15 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type,
 	// Set advertising TTL based on incoming TTL only if it's greater than 0
 	if (incoming_ttl > 0) {
 		advertising_ttl = incoming_ttl;
-		// Decrement the TTL since this is a relayed packet
 		if (advertising_ttl > 0) {
-			advertising_ttl--; // Decrement TTL for the next advertisement
+			advertising_ttl--;
 		}
 	} else if (advertising_ttl == 0) {
 		// Do not reset advertising_ttl to 3 if it has reached 0
-		// It will remain at 0 until a new packet is received
-		advertising_ttl = 0; // Maintain the current state
+		advertising_ttl = 0;
 
 	} else {
-		advertising_ttl = INITIAL_TTL; // Default to 3 if incoming TTL is not valid and
-					       // advertising_ttl is not 0
+		advertising_ttl = INITIAL_TTL;
 	}
 
 	if (atomic_inc(&beacons_since_last_check) >= BEACON_BATCH_SIZE) {
@@ -238,7 +233,7 @@ static int send_adv_data(void)
 	uint8_t packet_sequence = global_sequence;
 
 	// Check if any advertising sets are active before sending new beacons
-	if (atomic_get(&active_adv_sets) > 0) { // Pass the address of active_adv_sets
+	if (atomic_get(&active_adv_sets) > 0) {
 		printk("Currently active advertising sets. Skipping new beacon advertisement.\n");
 		return -EBUSY; // Return busy if advertising is ongoing
 	}
@@ -246,16 +241,13 @@ static int send_adv_data(void)
 	*ptr++ = 0x59; // Company ID (LSB)
 	*ptr++ = 0x00; // Company ID (MSB)
 	*ptr++ = 0x08; // Custom first byte of manufacturer data
-	// Prepare advertising data with the current packet sequence
 	*ptr++ = packet_sequence; // Sequence number
-
 	*ptr++ = advertising_ttl; // Add TTL to the packet
-
-	printk("Sequence number: %d\n", packet_sequence);
-	printk("Advertising TTL: %d\n", advertising_ttl);
 
 	printk("Company ID bytes: 0x%02X 0x%02X\n", *(ptr - 3), *(ptr - 2));
 	printk("Custom first byte of manufacturer data: 0x%02X\n", *(ptr - 1));
+	printk("Sequence number: %d\n", packet_sequence);
+	printk("Advertising TTL: %d\n", advertising_ttl);
 
 	bool test_device_added = false;
 	int beacons_sent = 0;
@@ -319,8 +311,6 @@ static int send_adv_data(void)
 				*ptr++ = (beacon_queue[i].voltage >> 8) & 0xFF;
 				beacons_sent++;
 
-				// Mark the beacon as invalid (effectively removing it from the
-				// queue)
 				beacon_queue[i].is_valid = false;
 			}
 		}
@@ -360,7 +350,6 @@ static void check_and_send(void)
 	// Call cleanup_old_beacons to remove expired beacons
 	cleanup_old_beacons();
 
-	// Debugging information
 	if (IS_ENABLED(CONFIG_DEBUG)) {
 		printk("check_and_send: current_time=%u, last_send_time=%u\n", current_time,
 		       last_send_time);
@@ -380,7 +369,7 @@ static void check_and_send(void)
 
 	// Ensure we are not sending too frequently
 	if ((current_time - last_send_time) >= MAX_WAIT_TIME_MS) {
-		int err = send_adv_data(); // Attempt to send advertising data
+		int err = send_adv_data();
 		if (err == 0) {
 			atomic_set(&last_successful_operation, current_time);
 			last_send_time = current_time; // Update last send time only on success
@@ -391,7 +380,6 @@ static void check_and_send(void)
 			printk("Failed to send advertising data (err %d)\n", err);
 		}
 	} else {
-		// Debugging information for not sending
 		printk("Not sending: waiting for timeout\n");
 	}
 
