@@ -35,7 +35,7 @@ struct k_spinlock _sched_spinlock;
  */
 __incoherent struct k_thread _thread_dummy;
 
-static void update_cache(int preempt_ok);
+static ALWAYS_INLINE void update_cache(int preempt_ok);
 static void halt_thread(struct k_thread *thread, uint8_t new_state);
 static void add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
 
@@ -320,7 +320,7 @@ static void update_metairq_preempt(struct k_thread *thread)
  */
 }
 
-static void update_cache(int preempt_ok)
+static ALWAYS_INLINE void update_cache(int preempt_ok)
 {
 #ifndef CONFIG_SMP
 	struct k_thread *thread = next_up();
@@ -386,13 +386,6 @@ static void ready_thread(struct k_thread *thread)
 		update_cache(0);
 
 		flag_ipi(ipi_mask_create(thread));
-	}
-}
-
-void z_ready_thread_locked(struct k_thread *thread)
-{
-	if (thread_active_elsewhere(thread) == NULL) {
-		ready_thread(thread);
 	}
 }
 
@@ -718,7 +711,7 @@ struct k_thread *z_unpend_first_thread(_wait_q_t *wait_q)
 	K_SPINLOCK(&_sched_spinlock) {
 		thread = _priq_wait_best(&wait_q->waitq);
 
-		if (thread != NULL) {
+		if (unlikely(thread != NULL)) {
 			unpend_thread_no_timeout(thread);
 			(void)z_abort_thread_timeout(thread);
 		}
@@ -905,7 +898,7 @@ static inline void set_current(struct k_thread *new_thread)
  * function.
  *
  * @warning
- * The @ref _current value may have changed after this call and not refer
+ * The _current value may have changed after this call and not refer
  * to the interrupted thread anymore. It might be necessary to make a local
  * copy before calling this function.
  *
@@ -1598,4 +1591,14 @@ int z_sched_waitq_walk(_wait_q_t  *wait_q,
 	}
 
 	return status;
+}
+
+/* This routine exists for benchmarking purposes. It is not used in
+ * general production code.
+ */
+void z_unready_thread(struct k_thread *thread)
+{
+	K_SPINLOCK(&_sched_spinlock) {
+		unready_thread(thread);
+	}
 }

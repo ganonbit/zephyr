@@ -3,8 +3,11 @@
 #
 # Copyright (c) 2018-2022 Intel Corporation
 # Copyright 2022 NXP
+# Copyright (c) 2024 Arm Limited (or its affiliates). All rights reserved.
+#
 # SPDX-License-Identifier: Apache-2.0
 
+import argparse
 import logging
 import math
 import os
@@ -24,6 +27,7 @@ from twisterlib.environment import ZEPHYR_BASE, strip_ansi_sequences
 from twisterlib.error import TwisterException
 from twisterlib.platform import Platform
 from twisterlib.statuses import TwisterStatus
+from typing import Optional
 
 sys.path.insert(0, os.path.join(ZEPHYR_BASE, "scripts/pylib/build_helpers"))
 from domains import Domains
@@ -44,7 +48,7 @@ except ImportError as capture_error:
 logger = logging.getLogger('twister')
 logger.setLevel(logging.DEBUG)
 
-SUPPORTED_SIMS = ["mdb-nsim", "nsim", "renode", "qemu", "tsim", "armfvp", "xt-sim", "native", "custom"]
+SUPPORTED_SIMS = ["mdb-nsim", "nsim", "renode", "qemu", "tsim", "armfvp", "xt-sim", "native", "custom", "simics"]
 SUPPORTED_SIMS_IN_PYTEST = ['native', 'qemu']
 
 
@@ -69,11 +73,12 @@ def terminate_process(proc):
 
 
 class Handler:
-    def __init__(self, instance, type_str="build"):
+    def __init__(self, instance, type_str: str, options: argparse.Namespace,
+                 generator_cmd: Optional[str] = None, suite_name_check: bool = True):
         """Constructor
 
         """
-        self.options = None
+        self.options = options
 
         self.run = False
         self.type_str = type_str
@@ -87,8 +92,8 @@ class Handler:
         self.build_dir = instance.build_dir
         self.log = os.path.join(self.build_dir, "handler.log")
         self.returncode = 0
-        self.generator_cmd = None
-        self.suite_name_check = True
+        self.generator_cmd = generator_cmd
+        self.suite_name_check = suite_name_check
         self.ready = False
 
         self.args = []
@@ -170,16 +175,18 @@ class Handler:
 
 
 class BinaryHandler(Handler):
-    def __init__(self, instance, type_str):
+    def __init__(self, instance, type_str: str, options: argparse.Namespace, generator_cmd: Optional[str] = None,
+                 suite_name_check: bool = True):
         """Constructor
 
         @param instance Test Instance
         """
-        super().__init__(instance, type_str)
+        super().__init__(instance, type_str, options, generator_cmd, suite_name_check)
 
         self.seed = None
         self.extra_test_args = None
         self.line = b""
+        self.binary: Optional[str] = None
 
     def try_kill_process_by_pid(self):
         if self.pid_fn:
@@ -209,10 +216,9 @@ class BinaryHandler(Handler):
                 reader_t.join(this_timeout)
                 if not reader_t.is_alive() and self.line != b"":
                     line_decoded = self.line.decode('utf-8', "replace")
-                    if line_decoded.endswith(suffix):
-                        stripped_line = line_decoded[:-len(suffix)].rstrip()
-                    else:
-                        stripped_line = line_decoded.rstrip()
+                    stripped_line = line_decoded.rstrip()
+                    if stripped_line.endswith(suffix):
+                        stripped_line = stripped_line[:-len(suffix)].rstrip()
                     logger.debug("OUTPUT: %s", stripped_line)
                     log_out_fp.write(strip_ansi_sequences(line_decoded))
                     log_out_fp.flush()
@@ -256,7 +262,7 @@ class BinaryHandler(Handler):
                             "--variable", "RESC:@" + resc,
                             "--variable", "UART:" + uart]
         elif self.call_make_run:
-            command = [self.generator_cmd, "run"]
+            command = [self.generator_cmd, "-C", self.get_default_domain_build_dir(), "run"]
         elif self.instance.testsuite.type == "unit":
             command = [self.binary]
         else:
@@ -359,12 +365,13 @@ class BinaryHandler(Handler):
 
 
 class SimulationHandler(BinaryHandler):
-    def __init__(self, instance, type_str):
+    def __init__(self, instance, type_str: str, options: argparse.Namespace, generator_cmd: Optional[str] = None,
+                 suite_name_check: bool = True):
         """Constructor
 
         @param instance Test Instance
         """
-        super().__init__(instance, type_str)
+        super().__init__(instance, type_str, options, generator_cmd, suite_name_check)
 
         if type_str == 'renode':
             self.pid_fn = os.path.join(instance.build_dir, "renode.pid")
@@ -374,14 +381,6 @@ class SimulationHandler(BinaryHandler):
 
 
 class DeviceHandler(Handler):
-
-    def __init__(self, instance, type_str):
-        """Constructor
-
-        @param instance Test Instance
-        """
-        super().__init__(instance, type_str)
-
     def get_test_timeout(self):
         timeout = super().get_test_timeout()
         if self.options.enable_coverage:
@@ -443,12 +442,13 @@ class DeviceHandler(Handler):
             # Just because ser_fileno has data doesn't mean an entire line
             # is available yet.
             if serial_line:
-                sl = serial_line.decode('utf-8', 'ignore').lstrip()
-                logger.debug("DEVICE: {0}".format(sl.rstrip()))
-
-                log_out_fp.write(strip_ansi_sequences(sl).encode('utf-8'))
-                log_out_fp.flush()
-                harness.handle(sl.rstrip())
+                # can be more lines in serial_line so split them before handling
+                for sl in serial_line.decode('utf-8', 'ignore').splitlines(keepends=True):
+                    log_out_fp.write(strip_ansi_sequences(sl).encode('utf-8'))
+                    log_out_fp.flush()
+                    if sl := sl.strip():
+                        logger.debug("DEVICE: {0}".format(sl))
+                        harness.handle(sl)
 
             if harness.status != TwisterStatus.NONE:
                 if not harness.capture_coverage:
@@ -460,33 +460,40 @@ class DeviceHandler(Handler):
     def device_is_available(self, instance):
         device = instance.platform.name
         fixture = instance.testsuite.harness_config.get("fixture")
-        dut_found = False
+        duts_found = []
 
         for d in self.duts:
             if fixture and fixture not in map(lambda f: f.split(sep=':')[0], d.fixtures):
                 continue
             if d.platform != device or (d.serial is None and d.serial_pty is None):
                 continue
-            dut_found = True
+            duts_found.append(d)
+
+        if not duts_found:
+            raise TwisterException(f"No device to serve as {device} platform.")
+
+        # Select an available DUT with less failures
+        for d in sorted(duts_found, key=lambda _dut: _dut.failures):
             d.lock.acquire()
             avail = False
             if d.available:
                 d.available = 0
-                d.counter += 1
+                d.counter_increment()
                 avail = True
+                logger.debug(f"Retain DUT:{d.platform}, Id:{d.id}, "
+                             f"counter:{d.counter}, failures:{d.failures}")
             d.lock.release()
             if avail:
                 return d
 
-        if not dut_found:
-            raise TwisterException(f"No device to serve as {device} platform.")
-
         return None
 
-    def make_device_available(self, serial):
-        for d in self.duts:
-            if serial in [d.serial_pty, d.serial]:
-                d.available = 1
+    def make_dut_available(self, dut):
+        if self.instance.status in [TwisterStatus.ERROR, TwisterStatus.FAIL]:
+            dut.failures_increment()
+        logger.debug(f"Release DUT:{dut.platform}, Id:{dut.id}, "
+                     f"counter:{dut.counter}, failures:{dut.failures}")
+        dut.available = 1
 
     @staticmethod
     def run_custom_script(script, timeout):
@@ -540,7 +547,8 @@ class DeviceHandler(Handler):
                         command_extra_args.append("--cmd-pre-init")
                         command_extra_args.append("adapter serial %s" % board_id)
                     elif runner == "jlink":
-                        command.append("--tool-opt=-SelectEmuBySN  %s" % board_id)
+                        command.append("--dev-id")
+                        command.append(board_id)
                     elif runner == "linkserver":
                         # for linkserver
                         # --probe=#<number> select by probe index
@@ -586,7 +594,7 @@ class DeviceHandler(Handler):
             logger.debug(f"Terminated serial-pty:'{ser_pty}'")
     #
 
-    def _create_serial_connection(self, serial_device, hardware_baud,
+    def _create_serial_connection(self, dut, serial_device, hardware_baud,
                                   flash_timeout, serial_pty, ser_pty_process):
         try:
             ser = serial.Serial(
@@ -599,28 +607,34 @@ class DeviceHandler(Handler):
                 timeout=max(flash_timeout, self.get_test_timeout())
             )
         except serial.SerialException as e:
-            self.instance.status = TwisterStatus.FAIL
-            self.instance.reason = "Serial Device Error"
-            logger.error("Serial device error: %s" % (str(e)))
-
-            self.instance.add_missing_case_status(TwisterStatus.BLOCK, "Serial Device Error")
-            if serial_pty and ser_pty_process:
-                self._terminate_pty(serial_pty, ser_pty_process)
-
-            if serial_pty:
-                self.make_device_available(serial_pty)
-            else:
-                self.make_device_available(serial_device)
+            self._handle_serial_exception(e, dut, serial_pty, ser_pty_process)
             raise
 
         return ser
+
+
+    def _handle_serial_exception(self, exception, dut, serial_pty, ser_pty_process):
+        self.instance.status = TwisterStatus.FAIL
+        self.instance.reason = "Serial Device Error"
+        logger.error("Serial device error: %s" % (str(exception)))
+
+        self.instance.add_missing_case_status(TwisterStatus.BLOCK, "Serial Device Error")
+        if serial_pty and ser_pty_process:
+            self._terminate_pty(serial_pty, ser_pty_process)
+
+        self.make_dut_available(dut)
+
 
     def get_hardware(self):
         hardware = None
         try:
             hardware = self.device_is_available(self.instance)
+            in_waiting = 0
             while not hardware:
                 time.sleep(1)
+                in_waiting += 1
+                if in_waiting%60 == 0:
+                    logger.debug(f"Waiting for a DUT to run {self.instance.name}")
                 hardware = self.device_is_available(self.instance)
         except TwisterException as error:
             self.instance.status = TwisterStatus.FAIL
@@ -659,7 +673,7 @@ class DeviceHandler(Handler):
         hardware = self.get_hardware()
         if hardware:
             self.instance.dut = hardware.id
-        if not hardware:
+        else:
             return
 
         runner = hardware.runner or self.options.west_runner
@@ -674,9 +688,13 @@ class DeviceHandler(Handler):
         pre_script = hardware.pre_script
         post_flash_script = hardware.post_flash_script
         post_script = hardware.post_script
+        script_param = hardware.script_param
 
         if pre_script:
-            self.run_custom_script(pre_script, 30)
+            timeout = 30
+            if script_param:
+                timeout = script_param.get("pre_script_timeout", timeout)
+            self.run_custom_script(pre_script, timeout)
 
         flash_timeout = hardware.flash_timeout
         if hardware.flash_with_test:
@@ -688,6 +706,7 @@ class DeviceHandler(Handler):
 
         try:
             ser = self._create_serial_connection(
+                hardware,
                 serial_port,
                 hardware.baud,
                 flash_timeout,
@@ -740,7 +759,10 @@ class DeviceHandler(Handler):
             flash_error = True
 
         if post_flash_script:
-            self.run_custom_script(post_flash_script, 30)
+            timeout = 30
+            if script_param:
+                timeout = script_param.get("post_flash_timeout", timeout)
+            self.run_custom_script(post_flash_script, timeout)
 
         # Connect to device after flashing it
         if hardware.flash_before:
@@ -748,7 +770,8 @@ class DeviceHandler(Handler):
                 logger.debug(f"Attach serial device {serial_device} @ {hardware.baud} baud")
                 ser.port = serial_device
                 ser.open()
-            except serial.SerialException:
+            except serial.SerialException as e:
+                self._handle_serial_exception(e, hardware, serial_pty, ser_pty_process)
                 return
 
         if not flash_error:
@@ -778,12 +801,12 @@ class DeviceHandler(Handler):
         self._final_handle_actions(harness, handler_time)
 
         if post_script:
-            self.run_custom_script(post_script, 30)
+            timeout = 30
+            if script_param:
+                timeout = script_param.get("post_script_timeout", timeout)
+            self.run_custom_script(post_script, timeout)
 
-        if serial_pty:
-            self.make_device_available(serial_pty)
-        else:
-            self.make_device_available(serial_device)
+        self.make_dut_available(hardware)
 
 
 class QEMUHandler(Handler):
@@ -795,13 +818,14 @@ class QEMUHandler(Handler):
     for these to collect whether the test passed or failed.
     """
 
-    def __init__(self, instance, type_str):
+    def __init__(self, instance, type_str: str, options: argparse.Namespace, generator_cmd: Optional[str] = None,
+                 suite_name_check: bool = True):
         """Constructor
 
         @param instance Test instance
         """
 
-        super().__init__(instance, type_str)
+        super().__init__(instance, type_str, options, generator_cmd, suite_name_check)
         self.fifo_fn = os.path.join(instance.build_dir, "qemu-fifo")
 
         self.pid_fn = os.path.join(instance.build_dir, "qemu.pid")
@@ -1096,13 +1120,14 @@ class QEMUWinHandler(Handler):
      for these to collect whether the test passed or failed.
      """
 
-    def __init__(self, instance, type_str):
+    def __init__(self, instance, type_str: str, options: argparse.Namespace, generator_cmd: Optional[str] = None,
+                 suite_name_check: bool = True):
         """Constructor
 
         @param instance Test instance
         """
 
-        super().__init__(instance, type_str)
+        super().__init__(instance, type_str, options, generator_cmd, suite_name_check)
         self.pid_fn = os.path.join(instance.build_dir, "qemu.pid")
         self.fifo_fn = os.path.join(instance.build_dir, "qemu-fifo")
         self.pipe_handle = None

@@ -775,7 +775,7 @@ static void isr_rx(void *param)
 						(cis_lll->rx.payload_count / cis_lll->rx.bn)) *
 					       cig_lll->iso_interval_us;
 			iso_meta->timestamp %=
-				HAL_TICKER_TICKS_TO_US(BIT(HAL_TICKER_CNTR_MSBIT + 1U));
+				HAL_TICKER_TICKS_TO_US_64BIT(BIT64(HAL_TICKER_CNTR_MSBIT + 1U));
 			iso_meta->status = 0U;
 
 			ull_iso_pdu_rx_alloc();
@@ -1253,8 +1253,10 @@ static void payload_count_lazy_update(struct lll_conn_iso_stream *cis_lll, uint1
 			u = cis_lll->nse - ((cis_lll->nse / cis_lll->tx.bn) *
 					    (cis_lll->tx.bn - 1U -
 					     (payload_count % cis_lll->tx.bn)));
-			while (((cis_lll->tx.payload_count / cis_lll->tx.bn) + cis_lll->tx.ft) <
-			       (cis_lll->event_count + 1U)) {
+			while ((((cis_lll->tx.payload_count / cis_lll->tx.bn) + cis_lll->tx.ft) <
+				cis_lll->event_count) ||
+			       ((((cis_lll->tx.payload_count / cis_lll->tx.bn) + cis_lll->tx.ft) ==
+				 cis_lll->event_count) && (u <= cis_lll->nse))) {
 				/* sn and nesn are 1-bit, only Least Significant bit is needed */
 				cis_lll->sn++;
 				cis_lll->tx.bn_curr++;
@@ -1281,8 +1283,10 @@ static void payload_count_lazy_update(struct lll_conn_iso_stream *cis_lll, uint1
 			u = cis_lll->nse - ((cis_lll->nse / cis_lll->rx.bn) *
 					    (cis_lll->rx.bn - 1U -
 					     (payload_count % cis_lll->rx.bn)));
-			while (((cis_lll->rx.payload_count / cis_lll->rx.bn) + cis_lll->rx.ft) <
-			       (cis_lll->event_count + 1U)) {
+			while ((((cis_lll->rx.payload_count / cis_lll->rx.bn) + cis_lll->rx.ft) <
+				cis_lll->event_count) ||
+			       ((((cis_lll->rx.payload_count / cis_lll->rx.bn) + cis_lll->rx.ft) ==
+				 cis_lll->event_count) && (u <= cis_lll->nse))) {
 				/* sn and nesn are 1-bit, only Least Significant bit is needed */
 				cis_lll->nesn++;
 				cis_lll->rx.bn_curr++;

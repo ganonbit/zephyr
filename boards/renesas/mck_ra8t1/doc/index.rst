@@ -96,6 +96,14 @@ The below features are currently supported on Zephyr OS for MCB-RA8T1 board:
 +--------------+------------+----------------------+
 | CLOCK        | on-chip    | clock control        |
 +--------------+------------+----------------------+
+| ENTROPY      | on-chip    | entropy              |
++--------------+------------+----------------------+
+| SPI          | on-chip    | spi                  |
++--------------+------------+----------------------+
+| FLASH        | on-chip    | flash                |
++--------------+------------+----------------------+
+| PWM          | on-chip    | pwm                  |
++--------------+------------+----------------------+
 
 Other hardware features are currently not supported by the port.
 

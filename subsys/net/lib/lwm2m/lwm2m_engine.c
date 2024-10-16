@@ -96,7 +96,7 @@ static sys_slist_t engine_service_list;
 static K_KERNEL_STACK_DEFINE(engine_thread_stack, CONFIG_LWM2M_ENGINE_STACK_SIZE);
 static struct k_thread engine_thread_data;
 
-#define MAX_POLL_FD CONFIG_NET_SOCKETS_POLL_MAX
+#define MAX_POLL_FD CONFIG_ZVFS_POLL_MAX
 
 /* Resources */
 static struct zsock_pollfd sock_fds[MAX_POLL_FD];
@@ -1070,7 +1070,7 @@ int lwm2m_set_default_sockopt(struct lwm2m_ctx *ctx)
 			}
 		}
 
-		if (ctx->hostname_verify && (ctx->desthostname != NULL)) {
+		if (ctx->desthostname != NULL && lwm2m_security_mode(ctx) == LWM2M_SECURITY_CERT) {
 			/** store character at len position */
 			tmp = ctx->desthostname[ctx->desthostnamelen];
 

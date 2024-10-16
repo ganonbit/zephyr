@@ -21,7 +21,7 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/types.h>
 
-#include "shell/bt.h"
+#include "host/shell/bt.h"
 #include "audio.h"
 
 static void cap_discover_cb(struct bt_conn *conn, int err,
@@ -605,7 +605,7 @@ static int cmd_cap_commander_broadcast_reception_start(const struct shell *sh, s
 			return -ENOEXEC;
 		}
 
-		if (!VALID_BIS_SYNC(bis_sync)) {
+		if (!BT_BAP_BASS_VALID_BIT_BITFIELD(bis_sync)) {
 			shell_error(sh, "Invalid bis_sync: %lu", bis_sync);
 
 			return -ENOEXEC;

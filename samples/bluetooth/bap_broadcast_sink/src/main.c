@@ -1,22 +1,43 @@
 /*
- * Copyright (c) 2022-2023 Nordic Semiconductor ASA
+ * Copyright (c) 2022-2024 Nordic Semiconductor ASA
  * Copyright (c) 2024 Demant A/S
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <ctype.h>
+#include <errno.h>
+#include <stdint.h>
+#include <string.h>
 #include <strings.h>
 
+#include <zephyr/autoconf.h>
+#include <zephyr/bluetooth/addr.h>
+#include <zephyr/bluetooth/audio/lc3.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/audio/audio.h>
 #include <zephyr/bluetooth/audio/bap.h>
 #include <zephyr/bluetooth/audio/pacs.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/gap.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/hci_types.h>
+#include <zephyr/bluetooth/iso.h>
+#include <zephyr/bluetooth/uuid.h>
+#include <zephyr/kernel.h>
+#include <zephyr/net_buf.h>
 #include <zephyr/sys/byteorder.h>
+#include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/util_macro.h>
+#include <zephyr/sys_clock.h>
+#include <zephyr/toolchain.h>
+
 #if defined(CONFIG_LIBLC3)
 #include "lc3.h"
 #endif /* defined(CONFIG_LIBLC3) */
 #if defined(CONFIG_USB_DEVICE_AUDIO)
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/class/usb_audio.h>
 #include <zephyr/sys/ring_buffer.h>
@@ -37,7 +58,6 @@ BUILD_ASSERT(IS_ENABLED(CONFIG_SCAN_SELF) || IS_ENABLED(CONFIG_SCAN_OFFLOAD),
 #define ADV_TIMEOUT K_FOREVER
 #endif /* CONFIG_SCAN_SELF */
 
-#define INVALID_BROADCAST_ID        (BT_AUDIO_BROADCAST_ID_MAX + 1)
 #define PA_SYNC_INTERVAL_TO_TIMEOUT_RATIO 5 /* Set the timeout relative to interval */
 #define PA_SYNC_SKIP                5
 #define NAME_LEN                    sizeof(CONFIG_TARGET_BROADCAST_NAME) + 1
@@ -1173,14 +1193,21 @@ static bool is_substring(const char *substr, const char *str)
 
 static bool data_cb(struct bt_data *data, void *user_data)
 {
-	char *name = user_data;
+	bool *device_found = user_data;
+	char name[NAME_LEN] = {0};
 
 	switch (data->type) {
 	case BT_DATA_NAME_SHORTENED:
 	case BT_DATA_NAME_COMPLETE:
 	case BT_DATA_BROADCAST_NAME:
 		memcpy(name, data->data, MIN(data->data_len, NAME_LEN - 1));
-		return false;
+
+		if (is_substring(CONFIG_TARGET_BROADCAST_NAME, name)) {
+			/* Device found */
+			*device_found = true;
+			return false;
+		}
+		return true;
 	default:
 		return true;
 	}
@@ -1196,12 +1223,13 @@ static void broadcast_scan_recv(const struct bt_le_scan_recv_info *info, struct 
 		 * our own broadcast name filter.
 		 */
 		if (req_recv_state == NULL && strlen(CONFIG_TARGET_BROADCAST_NAME) > 0U) {
+			bool device_found = false;
 			struct net_buf_simple buf_copy;
-			char name[NAME_LEN] = {0};
 
 			net_buf_simple_clone(ad, &buf_copy);
-			bt_data_parse(&buf_copy, data_cb, name);
-			if (!(is_substring(CONFIG_TARGET_BROADCAST_NAME, name))) {
+			bt_data_parse(&buf_copy, data_cb, &device_found);
+
+			if (!device_found) {
 				return;
 			}
 		}
@@ -1287,8 +1315,13 @@ static int init(void)
 		return err;
 	}
 
+	err = bt_bap_scan_delegator_register(&scan_delegator_cbs);
+	if (err) {
+		printk("Scan delegator register failed (err %d)\n", err);
+		return err;
+	}
+
 	bt_bap_broadcast_sink_register_cb(&broadcast_sink_cbs);
-	bt_bap_scan_delegator_register_cb(&scan_delegator_cbs);
 	bt_le_per_adv_sync_cb_register(&bap_pa_sync_cb);
 	bt_le_scan_cb_register(&bap_scan_cb);
 
@@ -1335,7 +1368,7 @@ static int reset(void)
 	(void)memset(sink_broadcast_code, 0, sizeof(sink_broadcast_code));
 	(void)memset(&broadcaster_info, 0, sizeof(broadcaster_info));
 	(void)memset(&broadcaster_addr, 0, sizeof(broadcaster_addr));
-	broadcaster_broadcast_id = INVALID_BROADCAST_ID;
+	broadcaster_broadcast_id = BT_BAP_INVALID_BROADCAST_ID;
 
 	if (broadcast_sink != NULL) {
 		err = bt_bap_broadcast_sink_delete(broadcast_sink);

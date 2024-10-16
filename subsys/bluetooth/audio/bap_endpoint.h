@@ -48,8 +48,8 @@ struct bt_bap_ep {
 	struct bt_ascs_ase_status status;
 	struct bt_bap_stream *stream;
 	struct bt_audio_codec_cfg codec_cfg;
-	struct bt_audio_codec_qos qos;
-	struct bt_audio_codec_qos_pref qos_pref;
+	struct bt_bap_qos_cfg qos;
+	struct bt_bap_qos_cfg_pref qos_pref;
 	struct bt_bap_iso *iso;
 
 	/* unicast stopped reason */
@@ -85,6 +85,10 @@ struct bt_bap_unicast_group {
 	/* Unicast group fields */
 	uint8_t index;
 	bool allocated;
+	/* Used to determine whether any stream in this group has been started which will prevent
+	 * reconfiguring it
+	 */
+	bool has_been_connected;
 	struct bt_iso_cig *cig;
 	/* The ISO API for CIG creation requires an array of pointers to ISO channels */
 	struct bt_iso_chan *cis[UNICAST_GROUP_STREAM_CNT];
@@ -107,7 +111,7 @@ struct bt_bap_broadcast_source {
 	uint32_t broadcast_id; /* 24 bit */
 
 	struct bt_iso_big *big;
-	struct bt_audio_codec_qos *qos;
+	struct bt_bap_qos_cfg *qos;
 #if defined(CONFIG_BT_ISO_TEST_PARAMS)
 	/* Stored advanced parameters */
 	uint8_t irc;
@@ -174,7 +178,7 @@ struct bt_bap_broadcast_sink {
 	uint32_t broadcast_id; /* 24 bit */
 	uint32_t indexes_bitfield;
 	uint32_t valid_indexes_bitfield; /* based on codec support */
-	struct bt_audio_codec_qos codec_qos;
+	struct bt_bap_qos_cfg qos_cfg;
 	struct bt_le_per_adv_sync *pa_sync;
 	struct bt_iso_big *big;
 	struct bt_bap_broadcast_sink_bis bis[CONFIG_BT_BAP_BROADCAST_SNK_STREAM_COUNT];

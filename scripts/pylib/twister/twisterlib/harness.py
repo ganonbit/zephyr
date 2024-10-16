@@ -16,8 +16,9 @@ import time
 import shutil
 import json
 
+from pytest import ExitCode
 from twisterlib.reports import ReportStatus
-from twisterlib.error import ConfigurationError
+from twisterlib.error import ConfigurationError, StatusAttributeError
 from twisterlib.environment import ZEPHYR_BASE, PYTEST_PLUGIN_INSTALLED
 from twisterlib.handlers import Handler, terminate_process, SUPPORTED_SIMS_IN_PYTEST
 from twisterlib.statuses import TwisterStatus
@@ -75,9 +76,7 @@ class Harness:
             key = value.name if isinstance(value, Enum) else value
             self._status = TwisterStatus[key]
         except KeyError:
-            logger.error(f'Harness assigned status "{value}"'
-                           f' without an equivalent in TwisterStatus.'
-                           f' Assignment was ignored.')
+            raise StatusAttributeError(self.__class__, value)
 
     def configure(self, instance):
         self.instance = instance
@@ -353,7 +352,8 @@ class Pytest(Harness):
         self.source_dir = instance.testsuite.source_dir
         self.report_file = os.path.join(self.running_dir, 'report.xml')
         self.pytest_log_file_path = os.path.join(self.running_dir, 'twister_harness.log')
-        self.reserved_serial = None
+        self.reserved_dut = None
+        self._output = []
 
     def pytest_run(self, timeout):
         try:
@@ -364,10 +364,10 @@ class Pytest(Harness):
             self.status = TwisterStatus.FAIL
             self.instance.reason = str(pytest_exception)
         finally:
-            if self.reserved_serial:
-                self.instance.handler.make_device_available(self.reserved_serial)
-        self.instance.record(self.recording)
-        self._update_test_status()
+            self.instance.record(self.recording)
+            self._update_test_status()
+            if self.reserved_dut:
+                self.instance.handler.make_dut_available(self.reserved_dut)
 
     def generate_command(self):
         config = self.instance.testsuite.harness_config
@@ -417,14 +417,10 @@ class Pytest(Harness):
             for fixture in handler.options.fixture:
                 command.append(f'--twister-fixture={fixture}')
 
+        command.extend(pytest_args_yaml)
+
         if handler.options.pytest_args:
             command.extend(handler.options.pytest_args)
-            if pytest_args_yaml:
-                logger.warning(f'The pytest_args ({handler.options.pytest_args}) specified '
-                               'in the command line will override the pytest_args defined '
-                               f'in the YAML file {pytest_args_yaml}')
-        else:
-            command.extend(pytest_args_yaml)
 
         return command
 
@@ -436,7 +432,7 @@ class Pytest(Harness):
         # update the instance with the device id to have it in the summary report
         self.instance.dut = hardware.id
 
-        self.reserved_serial = hardware.serial_pty or hardware.serial
+        self.reserved_dut = hardware
         if hardware.serial_pty:
             command.append(f'--device-serial-pty={hardware.serial_pty}')
         else:
@@ -444,6 +440,9 @@ class Pytest(Harness):
                 f'--device-serial={hardware.serial}',
                 f'--device-serial-baud={hardware.baud}'
             ])
+
+        if hardware.flash_timeout:
+            command.append(f'--flash-timeout={hardware.flash_timeout}')
 
         options = handler.options
         if runner := hardware.runner or options.west_runner:
@@ -488,7 +487,7 @@ class Pytest(Harness):
             env=env
         ) as proc:
             try:
-                reader_t = threading.Thread(target=self._output_reader, args=(proc, self), daemon=True)
+                reader_t = threading.Thread(target=self._output_reader, args=(proc,), daemon=True)
                 reader_t.start()
                 reader_t.join(timeout)
                 if reader_t.is_alive():
@@ -501,6 +500,13 @@ class Pytest(Harness):
             except subprocess.TimeoutExpired:
                 self.status = TwisterStatus.FAIL
                 proc.kill()
+
+        if proc.returncode in (ExitCode.INTERRUPTED, ExitCode.USAGE_ERROR, ExitCode.INTERNAL_ERROR):
+            self.status = TwisterStatus.ERROR
+            self.instance.reason = f'Pytest error - return code {proc.returncode}'
+            with open(self.pytest_log_file_path, 'w') as log_file:
+                log_file.write(shlex.join(cmd) + '\n\n')
+                log_file.write('\n'.join(self._output))
 
     @staticmethod
     def _update_command_with_env_dependencies(cmd):
@@ -524,14 +530,15 @@ class Pytest(Harness):
 
         return cmd, env
 
-    @staticmethod
-    def _output_reader(proc, harness):
+    def _output_reader(self, proc):
+        self._output = []
         while proc.stdout.readable() and proc.poll() is None:
             line = proc.stdout.readline().decode().strip()
             if not line:
                 continue
+            self._output.append(line)
             logger.debug('PYTEST: %s', line)
-            harness.parse_record(line)
+            self.parse_record(line)
         proc.communicate()
 
     def _update_test_status(self):
@@ -555,7 +562,8 @@ class Pytest(Harness):
     def _parse_report_file(self, report):
         tree = ET.parse(report)
         root = tree.getroot()
-        if elem_ts := root.find('testsuite'):
+
+        if (elem_ts := root.find('testsuite')) is not None:
             if elem_ts.get('failures') != '0':
                 self.status = TwisterStatus.FAIL
                 self.instance.reason = f"{elem_ts.get('failures')}/{elem_ts.get('tests')} pytest scenario(s) failed"
@@ -590,11 +598,16 @@ class Pytest(Harness):
 
 class Gtest(Harness):
     ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    TEST_START_PATTERN = r".*\[ RUN      \] (?P<suite_name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?P<test_name>[a-zA-Z_][a-zA-Z0-9_]*)"
-    TEST_PASS_PATTERN = r".*\[       OK \] (?P<suite_name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?P<test_name>[a-zA-Z_][a-zA-Z0-9_]*)"
-    TEST_SKIP_PATTERN = r".*\[ DISABLED \] (?P<suite_name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?P<test_name>[a-zA-Z_][a-zA-Z0-9_]*)"
-    TEST_FAIL_PATTERN = r".*\[  FAILED  \] (?P<suite_name>[a-zA-Z_][a-zA-Z0-9_]*)\.(?P<test_name>[a-zA-Z_][a-zA-Z0-9_]*)"
-    FINISHED_PATTERN = r".*\[==========\] Done running all tests\."
+    _NAME_PATTERN = "[a-zA-Z_][a-zA-Z0-9_]*"
+    _SUITE_TEST_NAME_PATTERN = f"(?P<suite_name>{_NAME_PATTERN})\\.(?P<test_name>{_NAME_PATTERN})"
+    TEST_START_PATTERN = f".*\\[ RUN      \\] {_SUITE_TEST_NAME_PATTERN}"
+    TEST_PASS_PATTERN = f".*\\[       OK \\] {_SUITE_TEST_NAME_PATTERN}"
+    TEST_SKIP_PATTERN = f".*\\[ DISABLED \\] {_SUITE_TEST_NAME_PATTERN}"
+    TEST_FAIL_PATTERN = f".*\\[  FAILED  \\] {_SUITE_TEST_NAME_PATTERN}"
+    FINISHED_PATTERN = (
+        ".*(?:\\[==========\\] Done running all tests\\.|"
+        + "\\[----------\\] Global test environment tear-down)"
+    )
 
     def __init__(self):
         super().__init__()

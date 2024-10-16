@@ -7,16 +7,15 @@
 #define DT_DRV_COMPAT nxp_imx_csi
 
 #include <zephyr/kernel.h>
+#include <zephyr/irq.h>
+#include <zephyr/drivers/video.h>
+#include <zephyr/drivers/pinctrl.h>
 
 #include <fsl_csi.h>
 
 #ifdef CONFIG_HAS_MCUX_CACHE
 #include <fsl_cache.h>
 #endif
-
-#include <zephyr/drivers/video.h>
-#include <zephyr/drivers/pinctrl.h>
-#include <zephyr/irq.h>
 
 struct video_mcux_csi_config {
 	CSI_Type *base;
@@ -155,7 +154,7 @@ static int video_mcux_csi_set_fmt(const struct device *dev, enum video_endpoint_
 	status_t ret;
 	struct video_format format = *fmt;
 
-	if (!bpp || ep != VIDEO_EP_OUT) {
+	if (bpp == 0 || (ep != VIDEO_EP_OUT && ep != VIDEO_EP_ALL)) {
 		return -EINVAL;
 	}
 
@@ -198,7 +197,7 @@ static int video_mcux_csi_get_fmt(const struct device *dev, enum video_endpoint_
 {
 	const struct video_mcux_csi_config *config = dev->config;
 
-	if (fmt == NULL || ep != VIDEO_EP_OUT) {
+	if (fmt == NULL || (ep != VIDEO_EP_OUT && ep != VIDEO_EP_ALL)) {
 		return -EINVAL;
 	}
 
@@ -288,12 +287,13 @@ static int video_mcux_csi_enqueue(const struct device *dev, enum video_endpoint_
 	unsigned int to_read;
 	status_t ret;
 
-	if (ep != VIDEO_EP_OUT) {
+	if (ep != VIDEO_EP_OUT && ep != VIDEO_EP_ALL) {
 		return -EINVAL;
 	}
 
 	to_read = data->csi_config.linePitch_Bytes * data->csi_config.height;
 	vbuf->bytesused = to_read;
+	vbuf->line_offset = 0;
 
 	ret = CSI_TransferSubmitEmptyBuffer(config->base, &data->csi_handle,
 					    (uint32_t)vbuf->buffer);
@@ -311,7 +311,7 @@ static int video_mcux_csi_dequeue(const struct device *dev, enum video_endpoint_
 {
 	struct video_mcux_csi_data *data = dev->data;
 
-	if (ep != VIDEO_EP_OUT) {
+	if (ep != VIDEO_EP_OUT && ep != VIDEO_EP_ALL) {
 		return -EINVAL;
 	}
 
@@ -355,7 +355,7 @@ static int video_mcux_csi_get_caps(const struct device *dev, enum video_endpoint
 	const struct video_mcux_csi_config *config = dev->config;
 	int err = -ENODEV;
 
-	if (ep != VIDEO_EP_OUT) {
+	if (ep != VIDEO_EP_OUT && ep != VIDEO_EP_ALL) {
 		return -EINVAL;
 	}
 
@@ -394,6 +394,8 @@ static int video_mcux_csi_get_caps(const struct device *dev, enum video_endpoint
 
 	/* NXP MCUX CSI request at least 2 buffer before starting */
 	caps->min_vbuf_count = 2;
+	/* CSI only operates on buffers of full frame size */
+	caps->min_line_count = caps->max_line_count = LINE_COUNT_HEIGHT;
 
 	/* no source dev */
 	return err;

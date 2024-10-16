@@ -14,7 +14,7 @@ Pytest is a python framework that *“makes it easy to write small, readable tes
 support complex functional testing for applications and libraries”* (`<https://docs.pytest.org/en/7.3.x/>`_).
 Python is known for its free libraries and ease of using it for scripting. In addition, pytest
 utilizes the concept of plugins and fixtures, increasing its expendability and reusability.
-A pytest plugin `pytest-twister-harness` was introduced to provide an integration between pytest
+A pytest plugin ``pytest-twister-harness`` was introduced to provide an integration between pytest
 and twister, allowing Zephyr’s community to utilize pytest functionality with keeping twister as
 the main framework.
 
@@ -97,6 +97,8 @@ There are two ways for passing extra arguments to the called pytest subprocess:
       -s samples/subsys/testsuite/pytest/shell/sample.pytest.shell \
       --pytest-args='-k test_shell_print_version'
 
+   The command line arguments will extend those from the .yaml file. If the same argument is
+   present in both places, the one from the command line will take precedence.
 
 Fixtures
 ********

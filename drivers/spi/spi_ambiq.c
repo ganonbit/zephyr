@@ -10,9 +10,14 @@
 LOG_MODULE_REGISTER(spi_ambiq);
 
 #include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/spi/rtio.h>
 #include <zephyr/drivers/pinctrl.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/byteorder.h>
+#include <zephyr/pm/device.h>
+#include <zephyr/pm/policy.h>
+#include <zephyr/pm/device_runtime.h>
+
 #include <stdlib.h>
 #include <errno.h>
 #include "spi_context.h"
@@ -338,10 +343,16 @@ static int spi_ambiq_transceive(const struct device *dev, const struct spi_confi
 				const struct spi_buf_set *rx_bufs)
 {
 	struct spi_ambiq_data *data = dev->data;
-	int ret;
+	int pm_ret, ret = 0;
 
 	if (!tx_bufs && !rx_bufs) {
 		return 0;
+	}
+
+	pm_ret = pm_device_runtime_get(dev);
+
+	if (pm_ret < 0) {
+		LOG_ERR("pm_device_runtime_get failed: %d", pm_ret);
 	}
 
 	/* context setup */
@@ -350,15 +361,27 @@ static int spi_ambiq_transceive(const struct device *dev, const struct spi_confi
 	ret = spi_config(dev, config);
 
 	if (ret) {
-		spi_context_release(&data->ctx, ret);
-		return ret;
+		LOG_ERR("spi_config failed: %d", ret);
+		goto xfer_end;
 	}
 
 	spi_context_buffers_setup(&data->ctx, tx_bufs, rx_bufs, 1);
 
 	ret = spi_ambiq_xfer(dev, config);
 
+xfer_end:
 	spi_context_release(&data->ctx, ret);
+
+	/* Use async put to avoid useless device suspension/resumption
+	 * when doing consecutive transmission.
+	 */
+	if (!pm_ret) {
+		pm_ret = pm_device_runtime_put_async(dev, K_MSEC(2));
+
+		if (pm_ret < 0) {
+			LOG_ERR("pm_device_runtime_put failed: %d", pm_ret);
+		}
+	}
 
 	return ret;
 }
@@ -383,6 +406,9 @@ static int spi_ambiq_release(const struct device *dev, const struct spi_config *
 
 static const struct spi_driver_api spi_ambiq_driver_api = {
 	.transceive = spi_ambiq_transceive,
+#ifdef CONFIG_SPI_RTIO
+	.iodev_submit = spi_rtio_iodev_default_submit,
+#endif
 	.release = spi_ambiq_release,
 };
 
@@ -421,6 +447,35 @@ end:
 	return ret;
 }
 
+#ifdef CONFIG_PM_DEVICE
+static int spi_ambiq_pm_action(const struct device *dev, enum pm_device_action action)
+{
+	struct spi_ambiq_data *data = dev->data;
+	uint32_t ret;
+	am_hal_sysctrl_power_state_e status;
+
+	switch (action) {
+	case PM_DEVICE_ACTION_RESUME:
+		status = AM_HAL_SYSCTRL_WAKE;
+		break;
+	case PM_DEVICE_ACTION_SUSPEND:
+		status = AM_HAL_SYSCTRL_DEEPSLEEP;
+		break;
+	default:
+		return -ENOTSUP;
+	}
+
+	ret = am_hal_iom_power_ctrl(data->iom_handler, status, true);
+
+	if (ret != AM_HAL_STATUS_SUCCESS) {
+		LOG_ERR("am_hal_iom_power_ctrl failed: %d", ret);
+		return -EPERM;
+	} else {
+		return 0;
+	}
+}
+#endif /* CONFIG_PM_DEVICE */
+
 #define AMBIQ_SPI_INIT(n)                                                                          \
 	PINCTRL_DT_INST_DEFINE(n);                                                                 \
 	static int pwr_on_ambiq_spi_##n(void)                                                      \
@@ -448,7 +503,9 @@ end:
 		.pcfg = PINCTRL_DT_INST_DEV_CONFIG_GET(n),                                         \
 		.irq_config_func = spi_irq_config_func_##n,                                        \
 		.pwr_func = pwr_on_ambiq_spi_##n};                                                 \
-	DEVICE_DT_INST_DEFINE(n, spi_ambiq_init, NULL, &spi_ambiq_data##n, &spi_ambiq_config##n,   \
-			      POST_KERNEL, CONFIG_SPI_INIT_PRIORITY, &spi_ambiq_driver_api);
+	PM_DEVICE_DT_INST_DEFINE(n, spi_ambiq_pm_action);                                          \
+	DEVICE_DT_INST_DEFINE(n, spi_ambiq_init, PM_DEVICE_DT_INST_GET(n), &spi_ambiq_data##n,     \
+			      &spi_ambiq_config##n, POST_KERNEL, CONFIG_SPI_INIT_PRIORITY,         \
+			      &spi_ambiq_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(AMBIQ_SPI_INIT)

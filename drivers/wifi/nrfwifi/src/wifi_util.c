@@ -295,7 +295,7 @@ static int nrf_wifi_util_tx_stats(const struct shell *sh,
 
 	for (int i = 0; i < NRF_WIFI_FMAC_AC_MAX ; i++) {
 		queue = def_dev_ctx->tx_config.data_pending_txq[peer_index][i];
-		tx_pending_pkts = nrf_wifi_utils_q_len(fmac_dev_ctx->fpriv->opriv, queue);
+		tx_pending_pkts = nrf_wifi_utils_q_len(queue);
 
 		shell_fprintf(
 			sh,
@@ -435,7 +435,7 @@ static int nrf_wifi_util_show_vers(const struct shell *sh,
 	return status;
 }
 
-#ifndef CONFIG_NRF70_RADIO_TEST
+#if !defined(CONFIG_NRF70_RADIO_TEST) && !defined(CONFIG_NRF70_OFFLOADED_RAW_TX)
 static int nrf_wifi_util_dump_rpu_stats(const struct shell *sh,
 					size_t argc,
 					const char *argv[])
@@ -849,7 +849,7 @@ static int nrf_wifi_util_dump_rpu_stats(const struct shell *sh,
 
 	return 0;
 }
-#endif /* CONFIG_NRF70_RADIO_TEST */
+#endif /* !CONFIG_NRF70_RADIO_TEST && !CONFIG_NRF70_OFFLOADED_RAW_TX */
 
 #ifdef CONFIG_NRF_WIFI_RPU_RECOVERY
 static int nrf_wifi_util_trigger_rpu_recovery(const struct shell *sh,
@@ -964,7 +964,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_util_show_vers,
 		      1,
 		      0),
-#ifndef CONFIG_NRF70_RADIO_TEST
+#if !defined(CONFIG_NRF70_RADIO_TEST) && !defined(CONFIG_NRF70_OFFLOADED_RAW_TX)
 	SHELL_CMD_ARG(rpu_stats,
 		      NULL,
 		      "Display RPU stats "
@@ -972,7 +972,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(
 		      nrf_wifi_util_dump_rpu_stats,
 		      1,
 		      1),
-#endif /* CONFIG_NRF70_RADIO_TEST */
+#endif /* !CONFIG_NRF70_RADIO_TEST && !CONFIG_NRF70_OFFLOADED_RAW_TX*/
 #ifdef CONFIG_NRF_WIFI_RPU_RECOVERY
 	SHELL_CMD_ARG(rpu_recovery_test,
 		      NULL,
@@ -993,8 +993,9 @@ SHELL_CMD_REGISTER(wifi_util,
 static int nrf_wifi_util_init(void)
 {
 
-	if (nrf_wifi_util_conf_init(&ctx->conf_params) < 0)
+	if (nrf_wifi_util_conf_init(&ctx->conf_params) < 0) {
 		return -1;
+	}
 
 	return 0;
 }

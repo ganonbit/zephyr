@@ -261,7 +261,7 @@ void bt_l2cap_chan_del(struct bt_l2cap_chan *chan)
 	 * `l2cap_chan_destroy()` as it is not called for fixed channels.
 	 */
 	while (chan_has_data(le_chan)) {
-		struct net_buf *buf = net_buf_get(&le_chan->tx_queue, K_NO_WAIT);
+		struct net_buf *buf = k_fifo_get(&le_chan->tx_queue, K_NO_WAIT);
 
 		net_buf_unref(buf);
 	}
@@ -312,7 +312,7 @@ static void l2cap_rx_process(struct k_work *work)
 	struct bt_l2cap_le_chan *ch = CHAN_RX(work);
 	struct net_buf *buf;
 
-	while ((buf = net_buf_get(&ch->rx_queue, K_NO_WAIT))) {
+	while ((buf = k_fifo_get(&ch->rx_queue, K_NO_WAIT))) {
 		LOG_DBG("ch %p buf %p", ch, buf);
 		l2cap_chan_le_recv(ch, buf);
 		net_buf_unref(buf);
@@ -717,6 +717,10 @@ static void cancel_data_ready(struct bt_l2cap_le_chan *le_chan)
 int bt_l2cap_send_pdu(struct bt_l2cap_le_chan *le_chan, struct net_buf *pdu,
 		      bt_conn_tx_cb_t cb, void *user_data)
 {
+	if (!le_chan->chan.conn || le_chan->chan.conn->state != BT_CONN_CONNECTED) {
+		return -ENOTCONN;
+	}
+
 	if (pdu->ref != 1) {
 		/* The host may alter the buf contents when fragmenting. Higher
 		 * layers cannot expect the buf contents to stay intact. Extra
@@ -738,7 +742,7 @@ int bt_l2cap_send_pdu(struct bt_l2cap_le_chan *le_chan, struct net_buf *pdu,
 	make_closure(pdu->user_data, cb, user_data);
 	LOG_DBG("push: pdu %p len %d cb %p userdata %p", pdu, pdu->len, cb, user_data);
 
-	net_buf_put(&le_chan->tx_queue, pdu);
+	k_fifo_put(&le_chan->tx_queue, pdu);
 
 	raise_data_ready(le_chan); /* tis just a flag */
 
@@ -903,11 +907,15 @@ struct net_buf *l2cap_data_pull(struct bt_conn *conn,
 	 */
 	struct net_buf *pdu = k_fifo_peek_head(&lechan->tx_queue);
 
+	/* We don't have anything to send for the current channel. We could
+	 * however have something to send on another channel that is attached to
+	 * the same ACL connection. Re-trigger the TX processor: it will call us
+	 * again and this time we will select another channel to pull data from.
+	 */
 	if (!pdu) {
 		bt_tx_irq_raise();
 		return NULL;
 	}
-	/* __ASSERT(pdu, "signaled ready but no PDUs in the TX queue"); */
 
 	if (bt_buf_has_view(pdu)) {
 		LOG_ERR("already have view on %p", pdu);
@@ -929,7 +937,7 @@ struct net_buf *l2cap_data_pull(struct bt_conn *conn,
 		struct bt_l2cap_hdr *hdr;
 		uint16_t pdu_len = get_pdu_len(lechan, pdu);
 
-		LOG_DBG("Adding L2CAP PDU header: buf %p chan %p len %zu / %zu",
+		LOG_DBG("Adding L2CAP PDU header: buf %p chan %p len %u / %u",
 			pdu, lechan, pdu_len, pdu->len);
 
 		LOG_HEXDUMP_DBG(pdu->data, pdu->len, "PDU payload");
@@ -1299,7 +1307,7 @@ static void l2cap_chan_destroy(struct bt_l2cap_chan *chan)
 	}
 
 	/* Remove buffers on the SDU RX queue */
-	while ((buf = net_buf_get(&le_chan->rx_queue, K_NO_WAIT))) {
+	while ((buf = k_fifo_get(&le_chan->rx_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
 	}
 
@@ -2259,12 +2267,12 @@ static void l2cap_chan_shutdown(struct bt_l2cap_chan *chan)
 	}
 
 	/* Remove buffers on the TX queue */
-	while ((buf = net_buf_get(&le_chan->tx_queue, K_NO_WAIT))) {
+	while ((buf = k_fifo_get(&le_chan->tx_queue, K_NO_WAIT))) {
 		l2cap_tx_buf_destroy(chan->conn, buf, -ESHUTDOWN);
 	}
 
 	/* Remove buffers on the RX queue */
-	while ((buf = net_buf_get(&le_chan->rx_queue, K_NO_WAIT))) {
+	while ((buf = k_fifo_get(&le_chan->rx_queue, K_NO_WAIT))) {
 		net_buf_unref(buf);
 	}
 
@@ -2669,7 +2677,7 @@ static void l2cap_chan_recv_queue(struct bt_l2cap_le_chan *chan,
 		return;
 	}
 
-	net_buf_put(&chan->rx_queue, buf);
+	k_fifo_put(&chan->rx_queue, buf);
 	k_work_submit(&chan->rx_work);
 }
 #endif /* CONFIG_BT_L2CAP_DYNAMIC_CHANNEL */
@@ -3135,9 +3143,9 @@ static int bt_l2cap_dyn_chan_send(struct bt_l2cap_le_chan *le_chan, struct net_b
 		return -EINVAL;
 	}
 
-	CHECKIF(user_data_not_empty(buf)) {
-		LOG_DBG("Please clear user_data first");
-		return -EINVAL;
+	if (user_data_not_empty(buf)) {
+		/* There may be issues if user_data is not empty. */
+		LOG_WRN("user_data is not empty");
 	}
 
 	/* Prepend SDU length.
@@ -3162,7 +3170,7 @@ static int bt_l2cap_dyn_chan_send(struct bt_l2cap_le_chan *le_chan, struct net_b
 	net_buf_push_le16(buf, sdu_len);
 
 	/* Put buffer on TX queue */
-	net_buf_put(&le_chan->tx_queue, buf);
+	k_fifo_put(&le_chan->tx_queue, buf);
 
 	/* Always process the queue in the same context */
 	raise_data_ready(le_chan);

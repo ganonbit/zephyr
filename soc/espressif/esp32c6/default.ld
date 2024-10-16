@@ -29,12 +29,21 @@ user_sram_size = (user_sram_end - user_sram_org);
 #define RAMABLE_REGION     sram0_0_seg
 #define ROMABLE_REGION     FLASH
 
+#undef GROUP_DATA_LINK_IN
+#define GROUP_DATA_LINK_IN(vregion, lregion) > vregion AT > lregion
+
+#undef GROUP_NOLOAD_LINK_IN
+#define GROUP_NOLOAD_LINK_IN(vregion, lregion) > vregion
+
 /* Flash segments (rodata and text) should be mapped in the virtual address spaces.
  * Executing directly from LMA is not possible. */
 #undef GROUP_ROM_LINK_IN
 #define GROUP_ROM_LINK_IN(vregion, lregion) > CACHED_REGION AT > lregion
 
 /* Make sure new sections have consistent alignment between input and output sections */
+#undef SECTION_DATA_PROLOGUE
+#define SECTION_DATA_PROLOGUE(name, options, align) name options : ALIGN_WITH_INPUT
+
 #undef SECTION_PROLOGUE
 #define SECTION_PROLOGUE SECTION_DATA_PROLOGUE
 
@@ -84,6 +93,8 @@ REGION_ALIAS("rtc_reserved_seg", lp_reserved_seg );
 /*  Default entry point:  */
 ENTRY(CONFIG_KERNEL_ENTRY)
 
+_heap_sentry = DRAM_RESERVED_START;
+
 SECTIONS
 {
 #ifdef CONFIG_BOOTLOADER_MCUBOOT
@@ -124,6 +135,10 @@ SECTIONS
 #endif /* CONFIG_BOOTLOADER_MCUBOOT */
 
   #include <zephyr/linker/rel-sections.ld>
+
+#ifdef CONFIG_LLEXT
+  #include <zephyr/linker/llext-sections.ld>
+#endif
 
   /* --- START OF RTC --- */
 
@@ -372,6 +387,7 @@ SECTIONS
     *libzephyr.a:flash_encrypt.*(.literal .text .literal.* .text.*)
     *libzephyr.a:flash_encryption_secure_features.*(.literal .text .literal.* .text.*)
     *libzephyr.a:flash_partitions.*(.literal .text .literal.* .text.*)
+    *libzephyr.a:flash_qio_mode.*(.literal .text .literal.* .text.*)
     *libzephyr.a:spi_flash_hal.*(.literal .literal.* .text .text.*)
     *libzephyr.a:spi_flash_hal_common.*(.literal .literal.* .text .text.*)
     *libzephyr.a:esp_flash_api.*(.literal .text .literal.* .text.*)
@@ -499,6 +515,7 @@ SECTIONS
     *libzephyr.a:spi_flash_wrap.*(.rodata .rodata.* .srodata .srodata.*)
     *libzephyr.a:spi_flash_hpm_enable.*(.rodata .rodata.* .srodata .srodata.*)
     *libzephyr.a:spi_flash_oct_flash_init.*(.rodata .rodata.* .srodata .srodata.*)
+    *libzephyr.a:flash_qio_mode.*(.rodata .rodata.* .srodata .srodata.*)
 
     /* [mapping:esp_mm] */
     *libzephyr.a:esp_cache.*(.rodata .rodata.* .srodata .srodata.*)
@@ -642,7 +659,7 @@ SECTIONS
   _image_ram_start = _iram_start;
   #include <zephyr/linker/ram-end.ld>
 
-  ASSERT(((__bss_end - ORIGIN(sram0_0_seg)) <= LENGTH(sram0_0_seg)), "DRAM segment data does not fit.")
+  ASSERT(((_end - ORIGIN(sram0_0_seg)) <= LENGTH(sram0_0_seg)), "SRAM code/data does not fit.")
 
   /* --- END OF DRAM --- */
 
