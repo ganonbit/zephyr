@@ -176,3 +176,19 @@ Advertiser console:
 
 A nearby Bluetooth gateway should be able to receive the extended advertisements
 containing the aggregated beacon data.
+
+Configuration Changes
+*********************
+
+The following configuration options have been added or modified in the `prj.conf` file:
+
+- **Extended Advertising**: Enabled extended advertising with a maximum of 2 advertising sets.
+- **Extended Scanning**: Increased the buffer size for extended scanning.
+- **Advertising Data Length**: Set maximum advertising and scan data lengths to accommodate larger payloads.
+
+Debugging Enhancements
+**********************
+
+- The scanner now includes additional debug output for better visibility into the beacon detection process.
+- The advertiser has improved handling of incoming beacon data, including temperature and voltage readings.
+- The sequence history for beacons is now tracked to prevent duplicates.
