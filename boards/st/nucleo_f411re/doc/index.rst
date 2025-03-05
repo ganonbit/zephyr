@@ -1,7 +1,4 @@
-.. _nucleo_f411re_board:
-
-ST Nucleo F411RE
-################
+.. zephyr:board:: nucleo_f411re
 
 Overview
 ********
@@ -24,10 +21,6 @@ some highlights of the Nucleo F411RE board:
 
 - Three LEDs: USB communication (LD1), user LED (LD2), power LED (LD3)
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f411re.jpg
-   :align: center
-   :alt: Nucleo F411RE
 
 More information about the board can be found at the `Nucleo F411RE website`_.
 
@@ -64,33 +57,7 @@ More information about STM32F411RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_f411re board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port                         |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| I2S       | on-chip    | i2s                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f411re/nucleo_f411re_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

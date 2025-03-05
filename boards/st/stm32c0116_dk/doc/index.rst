@@ -1,7 +1,4 @@
-.. _stm32c0116_dk_board:
-
-ST STM32C0116-DK Discovery Kit
-##############################
+.. zephyr:board:: stm32c0116_dk
 
 Overview
 ********
@@ -11,10 +8,6 @@ microcontroller in a UFQFPN20 package. This Discovery kit features one UFQFPN20
 to DIL20 module designed with the STM32C011F6 microcontroller and allows the user to develop
 and share applications. It includes an on-board ST-LINK/V2-1 to debug and program the embedded
 STM32 microcontroller. Important board features include:
-
-.. image:: img/stm32c0116_dk.jpg
-     :align: center
-     :alt: STM32C0116-DK
 
 More information about the board can be found at the `STM32C0116-DK website`_.
 
@@ -46,43 +39,7 @@ More information about STM32C011F6 can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32c0116_dk board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | counter                             |
-+-----------+------------+-------------------------------------+
-| IWDG      | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| WWDG      | on-chip    | window watchdog                     |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| DMA       | on-chip    | Direct Memory Access                |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32c0116_dk/stm32c0116_dk_defconfig`
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

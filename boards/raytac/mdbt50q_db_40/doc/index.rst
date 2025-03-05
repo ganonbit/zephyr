@@ -1,7 +1,4 @@
-.. _raytac_mdbt50q_db_40_nrf52840:
-
-Raytac MDBT50Q-DB-40
-####################
+.. zephyr:board:: raytac_mdbt50q_db_40
 
 Overview
 ********
@@ -25,11 +22,6 @@ Nordic Semiconductor nRF52840 ARM Cortex-M4F CPU and the following devices:
 * :abbr:`USB (Universal Serial Bus)`
 * :abbr:`WDT (Watchdog Timer)`
 
-.. figure:: img/mdbt50q_db_40.jpg
-     :width: 442px
-     :align: center
-     :alt: MDBT50Q-DB-40
-
 More information about the board can be found at the `MDBT50Q-DB-40 website`_.
 The `MDBT50Q-DB-40 Specification`_ contains the demo board's datasheet.
 The `MDBT50Q-DB-40 Schematic`_ contains the demo board's schematic.
@@ -38,7 +30,7 @@ Hardware
 ********
 - Module Demo Board build by MDBT50Q-1MV2
 - Nordic nRF52840 SoC Solution Version: 2
-- A recommnded 3rd-party module by Nordic Semiconductor.
+- A recommended 3rd-party module by Nordic Semiconductor.
 - BT5.2&BT5.1&BT5 Bluetooth Specification Cerified
 - Supports BT5 Long Range Features
 - Cerifications: FCC, IC, CE, Telec(MIC), KC, SRRC, NCC, RCM, WPC
@@ -52,8 +44,8 @@ Hardware
 - 3 User LEDs
 - 4 User buttons
 - 1 Mini USB connector for power supply and USB communication
-- SWD connector for FW programing
-- J-Link interface for FW programing
+- SWD connector for FW programming
+- J-Link interface for FW programming
 - UART interface for UART communication
 
 Supported Features

@@ -1,7 +1,4 @@
-.. _imx8mm_evk:
-
-NXP i.MX8MM EVK
-###############
+.. zephyr:board:: imx8mm_evk
 
 Overview
 ********
@@ -66,6 +63,10 @@ features:
 | GPT       | on-chip    | timer                               |
 +-----------+------------+-------------------------------------+
 | ENET      | on-chip    | ethernet port                       |
++-----------+------------+-------------------------------------+
+| GPIO      | on-chip    | GPIO ports                          |
++-----------+------------+-------------------------------------+
+| I2C       | on-chip    | I2C bus                             |
 +-----------+------------+-------------------------------------+
 
 The Zephyr imx8mm_evk board for Cortex-M4 supports the following hardware

@@ -18,7 +18,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <zephyr/posix/fcntl.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/fdtable.h>
 #include <zephyr/sys/speculation.h>
@@ -249,6 +248,7 @@ int zvfs_reserve_fd(void)
 		(void)z_fd_ref(fd);
 		fdtable[fd].obj = NULL;
 		fdtable[fd].vtable = NULL;
+		fdtable[fd].offset = 0;
 		k_mutex_init(&fdtable[fd].lock);
 		k_condvar_init(&fdtable[fd].cond);
 	}
@@ -280,8 +280,14 @@ void zvfs_finalize_typed_fd(int fd, void *obj, const struct fd_op_vtable *vtable
 	 * variables to avoid keeping the lock for a long period of time.
 	 */
 	if (vtable && vtable->ioctl) {
+		int prev_errno = errno;
+
 		(void)zvfs_fdtable_call_ioctl(vtable, obj, ZFD_IOCTL_SET_LOCK,
 					   &fdtable[fd].lock);
+		if ((prev_errno != EOPNOTSUPP) && (errno == EOPNOTSUPP)) {
+			/* restore backed-up errno value if the backend does not support locking */
+			errno = prev_errno;
+		}
 	}
 }
 
@@ -389,7 +395,14 @@ int zvfs_close(int fd)
 	(void)k_mutex_lock(&fdtable[fd].lock, K_FOREVER);
 	if (fdtable[fd].vtable->close != NULL) {
 		/* close() is optional - e.g. stdinout_fd_op_vtable */
-		res = fdtable[fd].vtable->close(fdtable[fd].obj);
+		if (fdtable[fd].mode & ZVFS_MODE_IFSOCK) {
+			/* Network socket needs to know socket number so pass
+			 * it via close2() call.
+			 */
+			res = fdtable[fd].vtable->close2(fdtable[fd].obj, fd);
+		} else {
+			res = fdtable[fd].vtable->close(fdtable[fd].obj);
+		}
 	}
 	k_mutex_unlock(&fdtable[fd].lock);
 

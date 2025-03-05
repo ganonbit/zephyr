@@ -1,7 +1,4 @@
-.. _nucleo_wba52cg_board:
-
-ST Nucleo WBA52CG
-#################
+.. zephyr:board:: nucleo_wba52cg
 
 Overview
 ********
@@ -36,10 +33,6 @@ platform with a wide choice of specialized shields.
 - Flexible power-supply options: ST-LINK USB VBUS or external sources
 - On-board STLINK-V3MODS debugger/programmer with USB re-enumeration capability:
   mass storage, Virtual COM port, and debug port
-
-.. image:: img/nucleowba52cg.jpg
-   :align: center
-   :alt: Nucleo WBA52CG
 
 More information about the board can be found at the `Nucleo WBA52CG website`_.
 
@@ -155,35 +148,7 @@ More information about STM32WB55RG can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_wba52cg board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| RNG       | on-chip    | True Random number generator        |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_wba52cg/nucleo_wba52cg_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

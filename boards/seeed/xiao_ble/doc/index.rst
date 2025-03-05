@@ -1,7 +1,4 @@
-.. _xiao_ble:
-
-XIAO BLE (Sense)
-################
+.. zephyr:board:: xiao_ble
 
 Overview
 ********
@@ -9,10 +6,6 @@ Overview
 The Seeed XIAO BLE (Sense) is a tiny (21 mm x 17.5 mm) Nordic Semiconductor
 nRF52840 ARM Cortex-M4F development board with onboard LEDs, USB port, QSPI
 flash, battery charger, and range of I/O broken out into 14 pins.
-
-.. figure:: img/xiao_ble.jpg
-     :align: center
-     :alt: XIAO BLE
 
 Hardware
 ********
@@ -30,42 +23,7 @@ Hardware
 Supported Features
 ==================
 
-The xiao_ble board configuration supports the following hardware features:
-
-+-----------+------------+----------------------+
-| Interface | Controller | Driver/Component     |
-+===========+============+======================+
-| ADC       | on-chip    | adc                  |
-+-----------+------------+----------------------+
-| CLOCK     | on-chip    | clock_control        |
-+-----------+------------+----------------------+
-| FLASH     | on-chip    | flash, QSPI flash    |
-+-----------+------------+----------------------+
-| GPIO      | on-chip    | gpio                 |
-+-----------+------------+----------------------+
-| I2C(M)    | on-chip    | i2c                  |
-+-----------+------------+----------------------+
-| MPU       | on-chip    | arch/arm             |
-+-----------+------------+----------------------+
-| NVIC      | on-chip    | arch/arm             |
-+-----------+------------+----------------------+
-| PWM       | on-chip    | pwm                  |
-+-----------+------------+----------------------+
-| RADIO     | on-chip    | Bluetooth,           |
-|           |            | ieee802154           |
-+-----------+------------+----------------------+
-| RTC       | on-chip    | system clock         |
-+-----------+------------+----------------------+
-| SPI(M/S)  | on-chip    | spi                  |
-+-----------+------------+----------------------+
-| UART      | on-chip    | serial               |
-+-----------+------------+----------------------+
-| USB       | on-chip    | usb                  |
-+-----------+------------+----------------------+
-| WDT       | on-chip    | watchdog             |
-+-----------+------------+----------------------+
-
-Other hardware features have not been enabled yet for this board.
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

@@ -1,7 +1,4 @@
-.. _stm32f072_eval_board:
-
-ST STM32F072 Evaluation
-#######################
+.. zephyr:board:: stm32f072_eval
 
 Overview
 ********
@@ -34,11 +31,6 @@ Here are some highlights of the STM32F072-EVAL board:
 - Two HDMI connectors with DDC and CEC
 - Smart Card slot
 - Motor control connector
-
-
-.. image:: img/stm32f072_eval.jpg
-     :align: center
-     :alt: STM32F072-EVAL
 
 Hardware
 ********
@@ -76,32 +68,7 @@ More information about STM32F072VB can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32f072_eval board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32f072_eval/stm32f072_eval_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

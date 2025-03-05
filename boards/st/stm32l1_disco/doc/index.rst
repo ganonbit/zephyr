@@ -1,7 +1,4 @@
-.. _stm32l1_disco_board:
-
-ST STM32L1 Discovery
-####################
+.. zephyr:board:: stm32l1_disco
 
 Overview
 ********
@@ -23,10 +20,6 @@ The STM32LDISCOVERY is no longer sold, but was widely available.
 stm32l1_disco configuration enables support for STM32LDISCOVERY board and
 stm32l152c_disco configuration enables support for STM32L152CDISCOVERY board.
 
-
-.. image:: img/stm32l1_disco.jpg
-     :align: center
-     :alt: STM32LDISCOVERY
 
 More information about the board can be found at the `STM32LDISCOVERY website`_.
 
@@ -54,54 +47,7 @@ More information about STM32L151x can be found in the `STM32L1x reference manual
 Supported Features
 ==================
 
-The Zephyr stm32l1_disco and stm32l152c_disco board configurations support
-the following hardware features:
-
-.. list-table:: Supported hardware
-   :header-rows: 1
-
-   * - Interface
-     - Controller
-     - Driver/component
-   * - NVIC
-     - on-chip
-     - nested vector interrupt controller
-   * - UART
-     - on-chip
-     - serial port-polling
-       serial port-interrupt
-   * - PINMUX
-     - on-chip
-     - pinmux
-   * - GPIO
-     - on-chip
-     - gpio
-   * - CLOCK
-     - on-chip
-     - reset and clock control
-   * - FLASH
-     - on-chip
-     - flash memory
-   * - EEPROM
-     - on-chip
-     - eeprom
-   * - WATCHDOG
-     - on-chip
-     - window watchdog
-   * - I2C
-     - on-chip
-     - i2c
-   * - SPI
-     - on-chip
-     - spi
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The configuration of stm32l1_disco can be found in
-:zephyr_file:`boards/st/stm32l1_disco/stm32l1_disco_defconfig`
-
-Configuration of stm32l152c_disco can be found in
-:zephyr_file:`boards/st/stm32l1_disco/stm32l152c_disco_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

@@ -1,7 +1,4 @@
-.. _swan_r5_board:
-
-Blues Wireless Swan
-###################
+.. zephyr:board:: swan_r5
 
 Overview
 ********
@@ -53,10 +50,6 @@ some highlights of the board:
   - 12-bit ADC, 2 x 12-bit DAC
   - low-power RTC, and CRC calculation peripherals
 
-.. image:: img/swan.jpg
-     :align: center
-     :alt: Blues Wireless Swan
-
 More information about the board can be found at the `Swan Product Page`_.
 
 Hardware
@@ -92,37 +85,7 @@ More information about Swan can be found here:
 Supported Features
 ==================
 
-The Zephyr Swan board configuration supports the following
-hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/blues/swan_r5/swan_r5_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================
@@ -221,6 +184,8 @@ You should see the following message on the console:
 
 References
 **********
+
+.. target-notes::
 
 .. _Swan Product Page:
    https://blues.io/products/swan

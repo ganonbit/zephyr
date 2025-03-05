@@ -1,7 +1,4 @@
-.. _nucleo_l452re_board:
-
-ST Nucleo L452RE
-################
+.. zephyr:board:: nucleo_l452re
 
 Overview
 ********
@@ -24,10 +21,6 @@ Here some highlights of these boards:
 
 - Three LEDs: USB communication (LD1), user LED (LD2), power LED (LD3)
 - One push-button: RESET
-
-.. image:: img/nucleo_l452re_p.jpg
-  :align: center
-  :alt: Nucleo L452RE-P
 
 The main difference between the ST Nucleo L452RE and the L452RE-P (note the missing
 "-P" at the end) lays in the External Switched Mode Power Supply (SMPS) included in
@@ -106,37 +99,9 @@ More information about STM32L452RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_l452re board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| CAN       | on-chip    | can                                 |
-+-----------+------------+-------------------------------------+
+.. zephyr:board-supported-hw::
 
 .. note:: CAN feature requires CAN transceiver
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l452re/nucleo_l452re_defconfig`
-
-And for Nucleo L452RE-P in this defconfig file:
-:zephyr_file:`boards/st/nucleo_l452re/nucleo_l452re_stm32l452xx_p_defconfig`
-
 
 Connections and IOs
 ===================

@@ -1,7 +1,4 @@
-.. _b_u585i_iot02a_board:
-
-ST B_U585I_IOT02A Discovery kit
-###############################
+.. zephyr:board:: b_u585i_iot02a
 
 Overview
 ********
@@ -34,10 +31,6 @@ some highlights of the B_U585I_IOT02A Discovery kit:
     - USB Vbus
     - External sources
 
-
-.. image:: img/b-u585i-iot02a.jpg
-     :align: center
-     :alt: B_U585I_IOT02A Discovery kit
 
 More information about the board can be found at the `B U585I IOT02A Discovery kit website`_.
 
@@ -160,48 +153,7 @@ More information about STM32U585AI can be found here:
 Supported Features
 ==================
 
-The Zephyr b_u585i_iot02a board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| RNG       | on-chip    | True Random number generator        |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | dac                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb_device                          |
-+-----------+------------+-------------------------------------+
-| BKP SRAM  | on-chip    | Backup SRAM                         |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| AES       | on-chip    | crypto                              |
-+-----------+------------+-------------------------------------+
-| RADIO     | STM32WB5MMG| Bluetooth Low Energy (BLE)          |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/b_u585i_iot02a/b_u585i_iot02a_defconfig`
+.. zephyr:board-supported-hw::
 
 Zephyr board options
 ====================

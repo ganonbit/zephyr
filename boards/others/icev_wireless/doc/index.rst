@@ -1,7 +1,4 @@
-.. _icev_wireless:
-
-ICE-V Wireless
-##############
+.. zephyr:board:: icev_wireless
 
 Overview
 ********
@@ -9,12 +6,6 @@ Overview
 The ICE-V Wireless is a combined ESP32C3 and iCE40 FPGA board.
 
 See the `ICE-V Wireless Github Project`_ for details.
-
-.. figure:: img/icev_wireless.jpg
-   :align: center
-   :alt: ICE-V Wireless
-
-   ICE-V Wireless
 
 Hardware
 ********
@@ -37,32 +28,7 @@ For details on iCE40 hardware please refer to the following resources:
 Supported Features
 ==================
 
-The ICE-V Wireless board configuration supports the following hardware
-features:
-
-+-----------+------------+------------------+
-| Interface | Controller | Driver/Component |
-+===========+============+==================+
-| PMP       | on-chip    | arch/riscv       |
-+-----------+------------+------------------+
-| INTMTRX   | on-chip    | intc_esp32c3     |
-+-----------+------------+------------------+
-| PINMUX    | on-chip    | pinctrl_esp32    |
-+-----------+------------+------------------+
-| USB UART  | on-chip    | serial_esp32_usb |
-+-----------+------------+------------------+
-| GPIO      | on-chip    | gpio_esp32       |
-+-----------+------------+------------------+
-| UART      | on-chip    | uart_esp32       |
-+-----------+------------+------------------+
-| I2C       | on-chip    | i2c_esp32        |
-+-----------+------------+------------------+
-| SPI       | on-chip    | spi_esp32_spim   |
-+-----------+------------+------------------+
-| ADC       | on-chip    |                  |
-+-----------+------------+------------------+
-
-Other hardware features have not been enabled yet for this board.
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================
@@ -243,6 +209,8 @@ You can debug an application in the usual way. Here is an example for the
 
 References
 **********
+
+.. target-notes::
 
 .. _ICE-V Wireless Github Project:
    https://github.com/ICE-V-Wireless/ICE-V-Wireless

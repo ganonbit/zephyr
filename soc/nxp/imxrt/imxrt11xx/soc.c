@@ -160,7 +160,7 @@ const __imx_boot_ivt_section ivt image_vector_table = {
 /**
  * @brief Initialize the system clock
  */
-static ALWAYS_INLINE void clock_init(void)
+__weak void clock_init(void)
 {
 	clock_root_config_t rootCfg = {0};
 
@@ -408,13 +408,13 @@ static ALWAYS_INLINE void clock_init(void)
 	CLOCK_SetRootClock(kCLOCK_Root_Lpi2c6, &rootCfg);
 #endif
 
-#if CONFIG_ETH_MCUX || CONFIG_ETH_NXP_ENET
+#if CONFIG_ETH_NXP_ENET
 #if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(enet))
 	/* 50 MHz ENET clock */
 	rootCfg.mux = kCLOCK_ENET1_ClockRoot_MuxSysPll1Div2;
 	rootCfg.div = 10;
 	CLOCK_SetRootClock(kCLOCK_Root_Enet1, &rootCfg);
-#if CONFIG_ETH_MCUX_RMII_EXT_CLK
+#if CONFIG_ETH_NXP_ENET_RMII_EXT_CLK
 	/* Set ENET_REF_CLK as an input driven by PHY */
 	IOMUXC_GPR->GPR4 &= ~IOMUXC_GPR_GPR4_ENET_REF_CLK_DIR(0x01U);
 	IOMUXC_GPR->GPR4 |= IOMUXC_GPR_GPR4_ENET_TX_CLK_SEL(0x1U);
@@ -442,7 +442,7 @@ static ALWAYS_INLINE void clock_init(void)
 	 */
 	rootCfg.div = 10;
 	CLOCK_SetRootClock(kCLOCK_Root_Enet2, &rootCfg);
-#if CONFIG_ETH_MCUX_RMII_EXT_CLK
+#if CONFIG_ETH_NXP_ENET_RMII_EXT_CLK
 	/* Set ENET1G_REF_CLK as an input driven by PHY */
 	IOMUXC_GPR->GPR5 &= ~IOMUXC_GPR_GPR5_ENET1G_REF_CLK_DIR(0x01U);
 	IOMUXC_GPR->GPR5 |= IOMUXC_GPR_GPR5_ENET1G_TX_CLK_SEL(0x1U);
@@ -455,7 +455,7 @@ static ALWAYS_INLINE void clock_init(void)
 #endif
 #endif
 
-#if defined(CONFIG_PTP_CLOCK_MCUX) || defined(CONFIG_PTP_CLOCK_NXP_ENET)
+#if defined(CONFIG_PTP_CLOCK_NXP_ENET)
 	/* 24MHz PTP clock */
 	rootCfg.mux = kCLOCK_ENET_TIMER1_ClockRoot_MuxOscRc48MDiv2;
 	rootCfg.div = 1;
@@ -473,17 +473,6 @@ static ALWAYS_INLINE void clock_init(void)
 	/* MIPI CSI-2 Rx connects to CSI via Video Mux */
 	CLOCK_EnableClock(kCLOCK_Video_Mux);
 	VIDEO_MUX->VID_MUX_CTRL.SET = VIDEO_MUX_VID_MUX_CTRL_CSI_SEL_MASK;
-
-	/* Configure MIPI CSI-2 Rx clocks */
-	rootCfg.div = 8;
-	rootCfg.mux = kCLOCK_CSI2_ClockRoot_MuxSysPll3Out;
-	CLOCK_SetRootClock(kCLOCK_Root_Csi2, &rootCfg);
-
-	rootCfg.mux = kCLOCK_CSI2_ESC_ClockRoot_MuxSysPll3Out;
-	CLOCK_SetRootClock(kCLOCK_Root_Csi2_Esc, &rootCfg);
-
-	rootCfg.mux = kCLOCK_CSI2_UI_ClockRoot_MuxSysPll3Out;
-	CLOCK_SetRootClock(kCLOCK_Root_Csi2_Ui, &rootCfg);
 
 	/* Enable power domain for MIPI CSI-2 */
 	PGMC_BPC4->BPC_POWER_CTRL |= (PGMC_BPC_BPC_POWER_CTRL_PSW_ON_SOFT_MASK |
@@ -547,7 +536,7 @@ static ALWAYS_INLINE void clock_init(void)
 		kCLOCK_Usb480M, DT_PROP_BY_PHANDLE(DT_NODELABEL(usb2), clocks, clock_frequency));
 	CLOCK_EnableUsbhs1Clock(kCLOCK_Usb480M,
 				DT_PROP_BY_PHANDLE(DT_NODELABEL(usb2), clocks, clock_frequency));
-#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(usb1)) && CONFIG_USB_DC_NXP_EHCI
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(usb2)) && CONFIG_USB_DC_NXP_EHCI
 	USB_EhciPhyInit(kUSB_ControllerEhci1, CPU_XTAL_CLK_HZ, &usbPhyConfig);
 #endif
 #endif
@@ -570,12 +559,20 @@ static ALWAYS_INLINE void clock_init(void)
 #endif
 #endif
 
-#if !(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_flash), nxp_imx_flexspi)) &&                             \
+#if !(DT_NODE_HAS_COMPAT(DT_PARENT(DT_CHOSEN(zephyr_flash)), nxp_imx_flexspi)) &&  \
 	defined(CONFIG_MEMC_MCUX_FLEXSPI) && DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(flexspi))
 	/* Configure FLEXSPI1 using OSC_RC_48M_DIV2 */
 	rootCfg.mux = kCLOCK_FLEXSPI1_ClockRoot_MuxOscRc48MDiv2;
 	rootCfg.div = 1;
 	CLOCK_SetRootClock(kCLOCK_Root_Flexspi1, &rootCfg);
+#endif
+
+#if !(DT_NODE_HAS_COMPAT(DT_PARENT(DT_CHOSEN(zephyr_flash)), nxp_imx_flexspi)) &&  \
+	defined(CONFIG_MEMC_MCUX_FLEXSPI) && DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(flexspi2))
+	/* Configure FLEXSPI2 using OSC_RC_48M_DIV2 */
+	rootCfg.mux = kCLOCK_FLEXSPI2_ClockRoot_MuxOscRc48MDiv2;
+	rootCfg.div = 1;
+	CLOCK_SetRootClock(kCLOCK_Root_Flexspi2, &rootCfg);
 #endif
 
 	/* Keep core clock ungated during WFI */
@@ -682,6 +679,41 @@ void imxrt_post_init_display_interface(void)
 
 #endif
 
+#if CONFIG_VIDEO_MCUX_MIPI_CSI2RX
+int mipi_csi2rx_clock_set_freq(clock_root_t clock_root, uint32_t rate)
+{
+	clock_root_config_t rootCfg = {0};
+	uint32_t freq;
+	clock_name_t clk_source;
+
+	switch (clock_root) {
+	case kCLOCK_Root_Csi2:
+		rootCfg.mux = kCLOCK_CSI2_ClockRoot_MuxSysPll3Out;
+		break;
+	case kCLOCK_Root_Csi2_Esc:
+		rootCfg.mux = kCLOCK_CSI2_ESC_ClockRoot_MuxSysPll3Out;
+		break;
+	case kCLOCK_Root_Csi2_Ui:
+		rootCfg.mux = kCLOCK_CSI2_UI_ClockRoot_MuxSysPll3Out;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	clk_source = CLOCK_GetRootClockSource(clock_root, rootCfg.mux);
+	freq = CLOCK_GetFreq(clk_source);
+	if (rate > freq) {
+		LOG_ERR("Requested rate is higher than the maximum clock frequency");
+		return -EINVAL;
+	}
+
+	rootCfg.div = (uint32_t)freq / rate;
+	CLOCK_SetRootClock(clock_root, &rootCfg);
+
+	return 0;
+}
+#endif
+
 /**
  *
  * @brief Perform basic hardware initialization
@@ -729,8 +761,22 @@ static int imxrt_init(void)
 	return 0;
 }
 
+/*
+ * Stack pointer is not set at this point in the early init, but we call C
+ * functions from the SOC reset.
+ * Set a stack pointer so that C functions will work correctly
+ */
+
 #ifdef CONFIG_SOC_RESET_HOOK
-void soc_reset_hook(void)
+__asm__ (
+	".global soc_reset_hook\n"
+	"soc_reset_hook:\n"
+	"ldr r0, =z_main_stack+"STRINGIFY(CONFIG_MAIN_STACK_SIZE)";\n"
+	"msr msp, r0;\n"
+	"b _soc_reset_hook;\n"
+);
+
+void __used _soc_reset_hook(void)
 {
 	SystemInit();
 

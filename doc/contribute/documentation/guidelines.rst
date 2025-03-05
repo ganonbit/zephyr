@@ -655,6 +655,19 @@ you can reference it with::
    Read the `Zephyr Wikipedia Page`_ for more information about the
    project.
 
+.. tip::
+
+   When a document contains many external links, it can be useful to list them in a single
+   "References" section at the end of the document. This can be done using the
+   :rst:dir:`target-notes` directive. Example::
+
+      References
+      ==========
+
+      .. target-notes::
+
+      .. _external_link1: https://example.com
+      .. _external_link2: https://example.org
 
 Cross-referencing C documentation
 =================================
@@ -684,9 +697,10 @@ Cross-referencing C documentation
 
    You may provide a custom link text, similar to the built-in :rst:role:`ref` role.
 
-
 Visual Elements
 ***************
+
+.. _doc_images:
 
 Images
 ======
@@ -784,7 +798,7 @@ Application build commands
          :board: qemu_x86
          :goals: build
 
-   This wil render as:
+   This will render as:
 
       .. zephyr-app-commands::
          :zephyr-app: samples/hello_world
@@ -916,15 +930,7 @@ Cross-referencing files in the Zephyr tree
 ==========================================
 
 Special roles are available to reference files in the Zephyr tree. For example, referencing this
-very file can be done using the :rst:role:`zephyr_file` role, like this::
-
-   Check out :zephyr_file:`doc/contribute/documentation/guidelines.rst` for more information.
-
-This would render as:
-
-   Check out :zephyr_file:`doc/contribute/documentation/guidelines.rst` for more information.
-
-You may use the :rst:role:`zephyr_raw` role instead if you want to reference the "raw" content.
+very file can be done using the :rst:role:`zephyr_file` role.
 
 .. rst:role:: zephyr_file
 
@@ -935,6 +941,27 @@ You may use the :rst:role:`zephyr_raw` role instead if you want to reference the
    Will render as:
 
       Check out :zephyr_file:`doc/contribute/documentation/guidelines.rst` for more information.
+
+   You can reference specific lines or line ranges in a file by appending :samp:`#L{line_number}` or
+   :samp:`#L{start_line}-L{end_line}` to the file path::
+
+      See :zephyr_file:`doc/contribute/documentation/guidelines.rst#L3` for the main heading of
+      this document.
+
+   Will render as:
+
+      See :zephyr_file:`doc/contribute/documentation/guidelines.rst#L3` for the main heading of
+      this document.
+
+   The role automatically verifies that the referenced file exists in the Zephyr tree and will
+   generate a warning during documentation build if the file is not found.
+
+   .. note::
+
+      Use the line references sparingly as keeping them accurate over time can be challenging as the
+      content of the linked file is subject to change.
+
+   You may use the :rst:role:`zephyr_raw` role instead if you want to reference the "raw" content.
 
 .. rst:role:: zephyr_raw
 
@@ -956,6 +983,7 @@ You may use the :rst:role:`zephyr_raw` role instead if you want to reference the
 
          Check out :module_file:`hal_stm32:CMakeLists.txt` for more information.
 
+   Similar to :rst:role:`zephyr_file`, you can reference specific lines or line ranges in a file.
 
 Cross-referencing GitHub issues and pull requests
 =================================================
@@ -993,6 +1021,15 @@ Doxygen API documentation
    Will render as:
 
       .. doxygengroup:: can_interface
+
+
+   .. rubric:: Options
+
+   .. rst:directive:option:: project
+      :type: project name (optional)
+
+      Associated Doxygen project. This can be useful when multiple Doxygen
+      projects are configured.
 
 .. rst:role:: c:group
 
@@ -1184,7 +1221,52 @@ Code samples
 Boards
 ======
 
+.. rst:directive:: .. zephyr:board:: name
+
+   This directive is used at the beginning of a document to indicate it is the main documentation
+   page for a board whose name is given as the directive argument.
+
+   For example::
+
+      .. zephyr:board:: wio_terminal
+
+   The metadata for the board is read from various config files and used to automatically populate
+   some sections of the board documentation. A board documentation page that uses this directive
+   can be linked to using the :rst:role:`zephyr:board` role.
+
+.. rst:role:: zephyr:board
+
+   This role is used to reference a board documented using :rst:dir:`zephyr:board`.
+
+   For example::
+
+      Check out :zephyr:board:`wio_terminal` for more information.
+
+   Will render as:
+
+      Check out :zephyr:board:`wio_terminal` for more information.
+
 .. rst:directive:: .. zephyr:board-catalog::
 
    This directive is used to generate a catalog of Zephyr-supported boards that can be used to
    quickly browse the list of all supported boards and filter them according to various criteria.
+
+.. rst:directive:: .. zephyr:board-supported-hw::
+
+   This directive is used to show supported hardware features for all the targets of the board
+   documented in the current page. The tables are automatically generated based on the board's
+   Devicetree.
+
+   The directive must be used in a document that also contains a :rst:dir:`zephyr:board` directive,
+   as it relies on the board information to generate the table.
+
+   .. note::
+
+      This directive requires that the documentation is built with hardware features generation enabled
+      (``zephyr_generate_hw_features`` config option set to ``True``). If disabled, a warning message
+      will be shown instead of the hardware features tables.
+
+References
+**********
+
+.. target-notes::

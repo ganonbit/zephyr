@@ -1,7 +1,4 @@
-.. _nucleo_h755zi_q_board:
-
-ST Nucleo H755ZI-Q
-###################
+.. zephyr:board:: nucleo_h755zi_q
 
 Overview
 ********
@@ -36,10 +33,6 @@ Key Features
 - On-board ST-LINK/V3 debugger/programmer with USB re-enumeration
 - capability: mass storage, virtual COM port and debug port
 - USB OTG full speed or device only
-
-.. image:: img/nucleo_h755zi_q.webp
-   :align: center
-   :alt: Nucleo H755ZI-Q
 
 More information about the board can be found at the `Nucleo H755ZI-Q website`_.
 
@@ -84,40 +77,9 @@ Nucleo H755ZI-Q provides the following hardware components:
 Supported Features
 ==================
 
-The Zephyr nucleo_h755zi_q board configuration supports the following hardware
-features:
+.. zephyr:board-supported-hw::
 
-+-------------+------------+-------------------------------------+
-| Interface   | Controller | Driver/Component                    |
-+=============+============+=====================================+
-| NVIC        | on-chip    | nested vector interrupt controller  |
-+-------------+------------+-------------------------------------+
-| UART/USART  | on-chip    | serial port                         |
-+-------------+------------+-------------------------------------+
-| PINMUX      | on-chip    | pinmux                              |
-+-------------+------------+-------------------------------------+
-| GPIO        | on-chip    | gpio                                |
-+-------------+------------+-------------------------------------+
-| RTC         | on-chip    | counter                             |
-+-------------+------------+-------------------------------------+
-| I2C         | on-chip    | i2c                                 |
-+-------------+------------+-------------------------------------+
-| PWM         | on-chip    | pwm                                 |
-+-------------+------------+-------------------------------------+
-| ETHERNET    | on-chip    | ethernet                            |
-+-------------+------------+-------------------------------------+
-| RNG         | on-chip    | True Random number generator        |
-+-------------+------------+-------------------------------------+
-| USB OTG FS  | on-chip    | USB device                          |
-+-------------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration per core can be found in the defconfig files:
-:zephyr_file:`boards/st/nucleo_h755zi_q/nucleo_h755zi_q_stm32h755xx_m7_defconfig` and
-:zephyr_file:`boards/st/nucleo_h755zi_q/nucleo_h755zi_q_stm32h755xx_m4_defconfig`
-
-For mode details please refer to `STM32 Nucleo-144 board User Manual`_.
+For more details please refer to `STM32 Nucleo-144 board User Manual`_.
 
 Default Zephyr Peripheral Mapping:
 ----------------------------------

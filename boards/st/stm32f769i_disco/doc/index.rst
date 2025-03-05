@@ -1,7 +1,4 @@
-.. _stm32f769i_disco_board:
-
-ST STM32F769I Discovery
-#######################
+.. zephyr:board:: stm32f769i_disco
 
 Overview
 ********
@@ -39,10 +36,6 @@ and high-speed connectivity features. Important board features include:
 - Arduino Uno V3 connectors
 - Comprehensive free software including a variety of examples, part of the STM32Cube package
 - Supported by a wide choice of integrated development environments
-
-.. image:: img/stm32f769i_disco.jpg
-     :align: center
-     :alt: STM32F769I-DISCO
 
 More information about the board can be found at the `32F769I-DISCO website`_.
 
@@ -94,37 +87,7 @@ More information about STM32F769NIH6 can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32f769i_disco board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| ETHERNET  | on-chip    | Ethernet                            |
-+-----------+------------+-------------------------------------+
-| QSPI NOR  | on-chip    | flash                               |
-+-----------+------------+-------------------------------------+
-| FMC       | on-chip    | memc (SDRAM)                        |
-+-----------+------------+-------------------------------------+
-| TOUCH     | off-chip   | ft5336(FT6202)                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32f769i_disco/stm32f769i_disco_defconfig`
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

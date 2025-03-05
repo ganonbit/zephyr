@@ -1,7 +1,4 @@
-.. _nucleo_f303re_board:
-
-ST Nucleo F303RE
-################
+.. zephyr:board:: nucleo_f303re
 
 Overview
 ********
@@ -26,10 +23,6 @@ Here are some highlights of the Nucleo F303RE board:
 
 - One user LED
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f303re.jpg
-   :align: center
-   :alt: Nucleo F303RE
 
 More information about the board can be found at the `Nucleo F303RE website`_,
 and in the `STM32 Nucleo-64 board User Manual`_.
@@ -75,32 +68,7 @@ More information about the STM32F303RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_f303re board configuration supports the following hardware
-features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f303re/nucleo_f303re_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

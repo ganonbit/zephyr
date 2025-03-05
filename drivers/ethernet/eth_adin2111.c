@@ -317,7 +317,7 @@ int eth_adin2111_oa_data_read(const struct device *dev, const uint16_t port_idx)
 							   K_MSEC(CONFIG_ETH_ADIN2111_TIMEOUT));
 			if (!pkt) {
 				LOG_ERR("OA RX: cannot allcate packet space, skipping.");
-				return -EIO;
+				return -ENOMEM;
 			}
 			/* Skipping CRC32 */
 			ret = net_pkt_write(pkt, ctx->buf, ctx->scur - sizeof(uint32_t));
@@ -351,12 +351,23 @@ static int eth_adin2111_send_oa_frame(const struct device *dev, struct net_pkt *
 	uint16_t clen, len = net_pkt_get_len(pkt);
 	uint32_t hdr;
 	uint8_t chunks, i;
-	int ret, txc, cur;
+	int ret, txc, cur, ebo;
 
 	chunks = len / ctx->oa_cps;
 
 	if (len % ctx->oa_cps) {
 		chunks++;
+	}
+
+	if (chunks > 1) {
+		/* we have to calculate EBO so we do not exceed maximum Ethernet frame length */
+		ebo = (len % ctx->oa_cps) - 1;
+		if (ebo < 0) {
+			ebo += ctx->oa_cps;
+		}
+	} else {
+		/* we have to pad to the minimum Ethernet frame length */
+		ebo = ctx->oa_cps - 1;
 	}
 
 	ret = eth_adin2111_reg_read(dev, ADIN2111_BUFSTS, &txc);
@@ -380,7 +391,7 @@ static int eth_adin2111_send_oa_frame(const struct device *dev, struct net_pkt *
 		}
 		if (i == chunks) {
 			hdr |= ADIN2111_OA_DATA_HDR_EV;
-			hdr |= (ctx->oa_cps - 1) << ADIN2111_OA_DATA_HDR_EBO;
+			hdr |= ebo << ADIN2111_OA_DATA_HDR_EBO;
 		}
 
 		hdr |= eth_adin2111_oa_get_parity(hdr);
@@ -651,7 +662,7 @@ static void adin2111_offload_thread(void *p1, void *p2, void *p3)
 	const struct device *dev = p1;
 	struct adin2111_data *ctx = dev->data;
 	const struct adin2111_config *adin_cfg = dev->config;
-	bool is_adin2111 = (adin_cfg->id == ADIN2111_MAC);
+	const bool is_adin2111 = (adin_cfg->id == ADIN2111_MAC);
 	uint32_t status0;
 	uint32_t status1;
 	int ret;
@@ -683,6 +694,16 @@ static void adin2111_offload_thread(void *p1, void *p2, void *p3)
 			goto continue_unlock;
 		}
 
+		/* handle port 1 phy interrupts */
+		if (status0 & ADIN2111_STATUS0_PHYINT) {
+			adin2111_port_on_phyint(ctx->port[0]);
+		}
+
+		/* handle port 2 phy interrupts */
+		if (is_adin2111 && (status1 & ADIN2111_STATUS1_PHYINT)) {
+			adin2111_port_on_phyint(ctx->port[1]);
+		}
+
 		if (!ctx->oa) {
 #if CONFIG_ETH_ADIN2111_SPI_CFG0
 			if (status0 & ADIN2111_STATUS1_SPI_ERR) {
@@ -691,61 +712,39 @@ static void adin2111_offload_thread(void *p1, void *p2, void *p3)
 #endif
 		}
 
-		/* handle port 1 phy interrupts */
-		if (status0 & ADIN2111_STATUS0_PHYINT) {
-			adin2111_port_on_phyint(ctx->port[0]);
-		}
-
-		/* handle port 2 phy interrupts */
-		if ((status1 & ADIN2111_STATUS1_PHYINT) && is_adin2111) {
-			adin2111_port_on_phyint(ctx->port[1]);
-		}
-
-		if (ctx->oa) {
+		/* handle rx interrupt(s) */
+		do {
+			/* handle port 1 rx */
 			if (status1 & ADIN2111_STATUS1_P1_RX_RDY) {
-				ret = eth_adin2111_oa_data_read(dev, 0);
+				if (ctx->oa) {
+					ret = eth_adin2111_oa_data_read(dev, 0);
+				} else {
+					ret = adin2111_read_fifo(dev, 0U);
+				}
+
 				if (ret < 0) {
 					break;
 				}
 			}
-			if (status1 & ADIN2111_STATUS1_P2_RX_RDY) {
-				ret = eth_adin2111_oa_data_read(dev, 1);
+
+			/* handle port 2 rx */
+			if (is_adin2111 && (status1 & ADIN2111_STATUS1_P2_RX_RDY)) {
+				if (ctx->oa) {
+					ret = eth_adin2111_oa_data_read(dev, 1);
+				} else {
+					ret = adin2111_read_fifo(dev, 1U);
+				}
+
 				if (ret < 0) {
 					break;
 				}
 			}
-			goto continue_unlock;
-		}
 
-		/* handle port 1 rx */
-		if (status1 & ADIN2111_STATUS1_P1_RX_RDY) {
-			do {
-				ret = adin2111_read_fifo(dev, 0U);
-				if (ret < 0) {
-					break;
-				}
-
-				ret = eth_adin2111_reg_read(dev, ADIN2111_STATUS1, &status1);
-				if (ret < 0) {
-					goto continue_unlock;
-				}
-			} while (!!(status1 & ADIN2111_STATUS1_P1_RX_RDY));
-		}
-
-		/* handle port 2 rx */
-		if ((status1 & ADIN2111_STATUS1_P2_RX_RDY) && is_adin2111) {
-			do {
-				ret = adin2111_read_fifo(dev, 1U);
-				if (ret < 0) {
-					break;
-				}
-
-				ret = eth_adin2111_reg_read(dev, ADIN2111_STATUS1, &status1);
-				if (ret < 0) {
-					goto continue_unlock;
-				}
-			} while (!!(status1 & ADIN2111_STATUS1_P2_RX_RDY));
-		}
+			ret = eth_adin2111_reg_read(dev, ADIN2111_STATUS1, &status1);
+			if (ret < 0) {
+				break;
+			}
+		} while (status1 & (ADIN2111_STATUS1_P1_RX_RDY | ADIN2111_STATUS1_P2_RX_RDY));
 
 continue_unlock:
 		/* clear interrupts */
@@ -998,7 +997,7 @@ static int adin2111_write_filter_address(const struct device *dev,
 static int adin2111_filter_multicast(const struct device *dev)
 {
 	const struct adin2111_config *cfg = dev->config;
-	bool is_adin2111 = (cfg->id == ADIN2111_MAC);
+	const bool is_adin2111 = (cfg->id == ADIN2111_MAC);
 	uint8_t mm[NET_ETH_ADDR_LEN] = {BIT(0), 0U, 0U, 0U, 0U, 0U};
 	uint8_t mmask[NET_ETH_ADDR_LEN] = {0xFFU, 0U, 0U, 0U, 0U, 0U};
 	uint32_t rules = ADIN2111_ADDR_APPLY2PORT1 |
@@ -1013,7 +1012,7 @@ static int adin2111_filter_multicast(const struct device *dev)
 static int adin2111_filter_broadcast(const struct device *dev)
 {
 	const struct adin2111_config *cfg = dev->config;
-	bool is_adin2111 = (cfg->id == ADIN2111_MAC);
+	const bool is_adin2111 = (cfg->id == ADIN2111_MAC);
 	uint8_t mac[NET_ETH_ADDR_LEN] = {0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU, 0xFFU};
 	uint32_t rules = ADIN2111_ADDR_APPLY2PORT1 |
 			 (is_adin2111 ? ADIN2111_ADDR_APPLY2PORT2 : 0) |
@@ -1133,7 +1132,7 @@ static int eth_adin2111_set_promiscuous(const struct device *dev, const uint16_t
 					bool enable)
 {
 	const struct adin2111_config *cfg = dev->config;
-	bool is_adin2111 = (cfg->id == ADIN2111_MAC);
+	const bool is_adin2111 = (cfg->id == ADIN2111_MAC);
 	uint32_t fwd_mask;
 
 	if ((!is_adin2111 && port_idx > 0) || (is_adin2111 && port_idx > 1)) {
@@ -1358,7 +1357,7 @@ int eth_adin2111_sw_reset(const struct device *dev, uint16_t delay)
 static int adin2111_init(const struct device *dev)
 {
 	const struct adin2111_config *cfg = dev->config;
-	bool is_adin2111 = (cfg->id == ADIN2111_MAC);
+	const bool is_adin2111 = (cfg->id == ADIN2111_MAC);
 	struct adin2111_data *ctx = dev->data;
 	int ret;
 	uint32_t val;

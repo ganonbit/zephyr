@@ -1,7 +1,4 @@
-.. _nucleo_f031k6_board:
-
-ST Nucleo F031K6
-################
+.. zephyr:board:: nucleo_f031k6
 
 Overview
 ********
@@ -15,10 +12,6 @@ The STM32 Nucleo board integrates the ST-LINK/V2-1 debugger and programmer.
 
 The STM32 Nucleo board comes with the STM32 comprehensive software HAL library together
 with various packaged software examples.
-
-.. image:: img/nucleo_f031k6.jpg
-   :align: center
-   :alt: Nucleo F031k6
 
 More information about the board can be found at the `Nucleo F031K6 website`_.
 
@@ -48,33 +41,7 @@ More information about STM32F031K6 can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_f031k6 board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| FLASH     | on-chip    | flash memory                        |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c controller                      |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi controller                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f031k6/nucleo_f031k6_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

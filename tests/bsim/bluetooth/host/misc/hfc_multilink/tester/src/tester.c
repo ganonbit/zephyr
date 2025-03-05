@@ -14,8 +14,10 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/hci_raw.h>
+#include <zephyr/bluetooth/hci_types.h>
 #include <zephyr/bluetooth/gap.h>
 
+#include "common/hci_common_internal.h"
 #include "common/bt_str.h"
 
 #include "host/conn_internal.h"
@@ -37,7 +39,7 @@ DEFINE_FLAG(flag_l2cap_connected);
 static K_FIFO_DEFINE(rx_queue);
 
 #define CMD_BUF_SIZE MAX(BT_BUF_EVT_RX_SIZE, BT_BUF_CMD_TX_SIZE)
-NET_BUF_POOL_FIXED_DEFINE(hci_cmd_pool, CONFIG_BT_BUF_CMD_TX_COUNT, CMD_BUF_SIZE, 8, NULL);
+NET_BUF_POOL_FIXED_DEFINE(hci_cmd_pool, BT_BUF_CMD_TX_COUNT, CMD_BUF_SIZE, 8, NULL);
 
 static K_SEM_DEFINE(cmd_sem, 1, 1);
 static struct k_sem acl_pkts;
@@ -467,7 +469,7 @@ static void start_adv(uint16_t interval, const char *name, size_t name_len)
 	set_param.channel_map = 0x07;
 	set_param.filter_policy = BT_LE_ADV_FP_NO_FILTER;
 	set_param.type = BT_HCI_ADV_IND;
-	set_param.own_addr_type = 0x01; /* random */
+	set_param.own_addr_type = BT_HCI_OWN_ADDR_RANDOM;
 
 	buf = bt_hci_cmd_create(BT_HCI_OP_LE_SET_ADV_PARAM, sizeof(set_param));
 	__ASSERT_NO_MSG(buf);

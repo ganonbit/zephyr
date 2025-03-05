@@ -49,7 +49,7 @@ typedef enum __packed {
 enum {
 	/** The connection context is used for automatic connection establishment
 	 *
-	 * That is, with @ref bt_conn_le_create_auto() or bt_le_set_auto_conn().
+	 * That is, with @ref bt_conn_le_create_auto().
 	 * This flag is set even after the connection has been established so
 	 * that the connection can be reestablished once disconnected.
 	 * The connection establishment may be performed with or without the filter
@@ -508,6 +508,11 @@ void notify_cs_config_created(struct bt_conn *conn, struct bt_conn_le_cs_config 
 void notify_cs_config_removed(struct bt_conn *conn, uint8_t config_id);
 
 void notify_cs_subevent_result(struct bt_conn *conn, struct bt_conn_le_cs_subevent_result *result);
+
+void notify_cs_security_enable_available(struct bt_conn *conn);
+
+void notify_cs_procedure_enable_available(struct bt_conn *conn,
+					  struct bt_conn_le_cs_procedure_enable_complete *params);
 
 #if defined(CONFIG_BT_SMP)
 /* If role specific LTK is present */

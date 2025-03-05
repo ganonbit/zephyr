@@ -1,7 +1,4 @@
-.. _nucleo_g031k8_board:
-
-ST Nucleo G031K8
-################
+.. zephyr:board:: nucleo_g031k8
 
 Overview
 ********
@@ -20,10 +17,6 @@ ST-LINK debugger/programmer.
 The STM32 Nucleo-32 board comes with the STM32 comprehensive free software
 libraries and examples available with the STM32Cube MCU Package.
 
-
-.. image:: img/nucleo_g031k8.jpg
-   :align: center
-   :alt: Nucleo G031K8
 
 More information about the board can be found at the `Nucleo G031K8 website`_.
 
@@ -63,31 +56,7 @@ More information about STM32G031K8 can be found in the
 Supported Features
 ==================
 
-The Zephyr nucleo_g031k8 board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c controller                      |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi controller                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_g031k8/nucleo_g031k8_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

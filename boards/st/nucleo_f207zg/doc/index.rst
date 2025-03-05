@@ -1,7 +1,4 @@
-.. _nucleo_f207zg_board:
-
-ST Nucleo F207ZG
-################
+.. zephyr:board:: nucleo_f207zg
 
 Overview
 ********
@@ -28,10 +25,6 @@ some highlights of the Nucleo F207ZG board:
 
 - Three user LEDs
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f207zg.jpg
-   :align: center
-   :alt: Nucleo F207ZG
 
 More information about the board can be found at the `Nucleo F207ZG website`_.
 
@@ -70,52 +63,7 @@ More information about STM32F207ZG can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_207zg board configuration supports the following hardware features:
-
-+-------------+------------+-------------------------------------+
-| Interface   | Controller | Driver/Component                    |
-+=============+============+=====================================+
-| NVIC        | on-chip    | nested vector interrupt controller  |
-+-------------+------------+-------------------------------------+
-| UART        | on-chip    | serial port-polling;                |
-|             |            | serial port-interrupt               |
-+-------------+------------+-------------------------------------+
-| PINMUX      | on-chip    | pinmux                              |
-+-------------+------------+-------------------------------------+
-| GPIO        | on-chip    | gpio                                |
-+-------------+------------+-------------------------------------+
-| ETHERNET    | on-chip    | Ethernet                            |
-+-------------+------------+-------------------------------------+
-| I2C         | on-chip    | i2c                                 |
-+-------------+------------+-------------------------------------+
-| USB         | on-chip    | USB device                          |
-+-------------+------------+-------------------------------------+
-| SPI         | on-chip    | spi                                 |
-+-------------+------------+-------------------------------------+
-| WATCHDOG    | on-chip    | independent watchdog                |
-+-------------+------------+-------------------------------------+
-| ADC         | on-chip    | ADC Controller                      |
-+-------------+------------+-------------------------------------+
-| DAC         | on-chip    | DAC Controller                      |
-+-------------+------------+-------------------------------------+
-| Backup SRAM | on-chip    | Backup SRAM                         |
-+-------------+------------+-------------------------------------+
-| PWM         | on-chip    | PWM                                 |
-+-------------+------------+-------------------------------------+
-| RNG         | on-chip    | Random Number Generator             |
-+-------------+------------+-------------------------------------+
-| DMA         | on-chip    | Direct Memory Access                |
-+-------------+------------+-------------------------------------+
-| die-temp    | on-chip    | die temperature sensor              |
-+-------------+------------+-------------------------------------+
-| RTC         | on-chip    | rtc                                 |
-+-------------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_f207zg/nucleo_f207zg_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

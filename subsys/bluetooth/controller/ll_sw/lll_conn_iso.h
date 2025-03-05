@@ -36,11 +36,17 @@ struct lll_conn_iso_stream {
 	uint32_t offset;            /* Offset of CIS from start of CIG in us */
 	uint32_t sub_interval;      /* Interval between subevents in us */
 	uint8_t  nse:5;             /* Number of subevents */
+
+	/* Frame Spacing */
+	uint16_t tifs_us;
+
+	/* Stream parameters */
 	struct lll_conn_iso_stream_rxtx rx; /* RX parameters */
 	struct lll_conn_iso_stream_rxtx tx; /* TX parameters */
 
 	/* Event and payload counters */
-	uint64_t event_count:39;    /* cisEventCount */
+	uint64_t event_count_prepare:39; /* cisEventCount in overlapping CIG prepare */
+	uint64_t event_count:39;         /* cisEventCount in current CIG event */
 
 	/* Acknowledgment and flow control */
 	uint8_t sn:1;               /* Sequence number */

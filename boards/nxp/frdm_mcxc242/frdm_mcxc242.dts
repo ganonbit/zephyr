@@ -122,6 +122,13 @@
 	pinctrl-names = "default";
 };
 
+&lpuart1 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&pinmux_lpuart1>;
+	pinctrl-names = "default";
+};
+
 &uart2 {
 	status = "disabled";
 	current-speed = <115200>;
@@ -141,6 +148,11 @@ i2c1: &i2c1 {
 		int1-gpios = <&gpioc 2 GPIO_ACTIVE_LOW>;
 		int2-gpios = <&gpioc 3 GPIO_ACTIVE_LOW>;
 	};
+};
+
+zephyr_udc0: &usb {
+	status = "okay";
+	num-bidir-endpoints = <8>;
 };
 
 &tpm1 {

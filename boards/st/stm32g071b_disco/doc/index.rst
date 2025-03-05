@@ -1,7 +1,4 @@
-.. _stm32g071b_disco_board:
-
-ST STM32G071B Discovery
-#######################
+.. zephyr:board:: stm32g071b_disco
 
 Overview
 ********
@@ -43,10 +40,6 @@ as a USB Type-C™ and Power Delivery analyzer.
 - On-board ST-LINK/V2-1 debugger/programmer with USB enumeration capability:
   mass storage, Virtual COM port and debug port
 
-.. image:: img/stm32g071b_disco.jpg
-   :align: center
-   :alt: STM32G071B-DISCO
-
 More information about the board can be found at the `STM32G071B-DISCO website`_.
 
 
@@ -59,29 +52,7 @@ More information about STM32G071RB can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32g071b_disco board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| UCPD      | on-chip    | ucpd                                |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/stm32g071b_disco/stm32g071b_disco_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

@@ -9,10 +9,18 @@
 
 #include <zephyr/drivers/display.h>
 #include <zephyr/drivers/video.h>
+#include <zephyr/drivers/video-controls.h>
 
-#define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main);
+
+#ifdef CONFIG_TEST
+#include "check_test_pattern.h"
+
+#define LOG_LEVEL LOG_LEVEL_DBG
+#else
+#define LOG_LEVEL CONFIG_LOG_DEFAULT_LEVEL
+#endif
 
 #define VIDEO_DEV_SW "VIDEO_SW_GENERATOR"
 
@@ -61,12 +69,12 @@ static inline void video_display_frame(const struct device *const display_dev,
 				       const struct video_buffer *const vbuf,
 				       const struct video_format fmt)
 {
-	struct display_buffer_descriptor buf_desc;
-
-	buf_desc.buf_size = vbuf->bytesused;
-	buf_desc.width = fmt.width;
-	buf_desc.pitch = buf_desc.width;
-	buf_desc.height = vbuf->bytesused / fmt.pitch;
+	struct display_buffer_descriptor buf_desc = {
+		.buf_size = vbuf->bytesused,
+		.width = fmt.width,
+		.pitch = buf_desc.width,
+		.height = vbuf->bytesused / fmt.pitch,
+	};
 
 	display_write(display_dev, 0, vbuf->line_offset, &buf_desc, vbuf->buffer);
 }
@@ -136,9 +144,7 @@ int main(void)
 #endif
 
 	if (strcmp(CONFIG_VIDEO_PIXEL_FORMAT, "")) {
-		fmt.pixelformat =
-			video_fourcc(CONFIG_VIDEO_PIXEL_FORMAT[0], CONFIG_VIDEO_PIXEL_FORMAT[1],
-				     CONFIG_VIDEO_PIXEL_FORMAT[2], CONFIG_VIDEO_PIXEL_FORMAT[3]);
+		fmt.pixelformat = VIDEO_FOURCC_FROM_STR(CONFIG_VIDEO_PIXEL_FORMAT);
 	}
 
 	LOG_INF("- Video format: %c%c%c%c %ux%u", (char)fmt.pixelformat,
@@ -170,6 +176,15 @@ int main(void)
 		fie.index++;
 	}
 
+	/* Set controls */
+	if (IS_ENABLED(CONFIG_VIDEO_CTRL_HFLIP)) {
+		video_set_ctrl(video_dev, VIDEO_CID_HFLIP, (void *)1);
+	}
+
+#ifdef CONFIG_TEST
+	video_set_ctrl(video_dev, VIDEO_CID_TEST_PATTERN, (void *)1);
+#endif
+
 #if DT_HAS_CHOSEN(zephyr_display)
 	const struct device *const display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 
@@ -198,7 +213,8 @@ int main(void)
 		 * For some hardwares, such as the PxP used on i.MX RT1170 to do image rotation,
 		 * buffer alignment is needed in order to achieve the best performance
 		 */
-		buffers[i] = video_buffer_aligned_alloc(bsize, CONFIG_VIDEO_BUFFER_POOL_ALIGN);
+		buffers[i] = video_buffer_aligned_alloc(bsize, CONFIG_VIDEO_BUFFER_POOL_ALIGN,
+							K_FOREVER);
 		if (buffers[i] == NULL) {
 			LOG_ERR("Unable to alloc video buffer");
 			return 0;
@@ -225,6 +241,12 @@ int main(void)
 
 		LOG_DBG("Got frame %u! size: %u; timestamp %u ms", frame++, vbuf->bytesused,
 		       vbuf->timestamp);
+
+#ifdef CONFIG_TEST
+		if (is_colorbar_ok(vbuf->buffer, fmt)) {
+			LOG_DBG("Pattern OK!\n");
+		}
+#endif
 
 #if DT_HAS_CHOSEN(zephyr_display)
 		video_display_frame(display_dev, vbuf, fmt);

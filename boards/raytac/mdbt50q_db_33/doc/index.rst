@@ -1,7 +1,4 @@
-.. _raytac_mdbt50q_db_33_nrf52833:
-
-Raytac MDBT50Q-DB-33
-####################
+.. zephyr:board:: raytac_mdbt50q_db_33
 
 Overview
 ********
@@ -25,11 +22,6 @@ Nordic Semiconductor nRF52833 ARM Cortex-M4F CPU and the following devices:
 * :abbr:`USB (Universal Serial Bus)`
 * :abbr:`WDT (Watchdog Timer)`
 
-.. figure:: img/mdbt50q_db_33.jpg
-     :width: 442px
-     :align: center
-     :alt: MDBT50Q-DB-33
-
 More information about the board can be found at the `MDBT50Q-DB-33 website`_.
 The `MDBT50Q-DB-33 Specification`_ contains the demo board's datasheet.
 The `MDBT50Q-DB-33 Schematic`_ contains the demo board's schematic.
@@ -38,7 +30,7 @@ Hardware
 ********
 - Module Demo Board build by MDBT50Q-512K
 - Nordic nRF52833 SoC Solution
-- A recommnded 3rd-party module by Nordic Semiconductor.
+- A recommended 3rd-party module by Nordic Semiconductor.
 - BT5.2&BT5.1&BT5 Bluetooth Specification Cerified
 - Supports BT5 Long Range Features
 - Cerifications: FCC, IC, CE, Telec(MIC), KC, SRRC, NCC, RCM, WPC
@@ -52,8 +44,8 @@ Hardware
 - 3 User LEDs
 - 4 User buttons
 - 1 Mini USB connector for power supply and USB communication
-- SWD connector for FW programing
-- J-Link interface for FW programing
+- SWD connector for FW programming
+- J-Link interface for FW programming
 - UART interface for UART communication
 
 Supported Features

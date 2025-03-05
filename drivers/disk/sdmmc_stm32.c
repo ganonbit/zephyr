@@ -537,7 +537,7 @@ static const struct disk_operations stm32_sdmmc_ops = {
 };
 
 static struct disk_info stm32_sdmmc_info = {
-	.name = CONFIG_SDMMC_VOLUME_NAME,
+	.name = DT_INST_PROP_OR(0, disk_name, "SD"),
 	.ops = &stm32_sdmmc_ops,
 };
 

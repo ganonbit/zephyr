@@ -1,7 +1,4 @@
-.. _nucleo_h753zi_board:
-
-ST Nucleo H753ZI
-################
+.. zephyr:board:: nucleo_h753zi
 
 Overview
 ********
@@ -43,10 +40,6 @@ Key Features
 - Comprehensive free software libraries and examples available with the
   STM32Cube MCU package.
 - Arm* Mbed Enabled* compliant (only for some Nucleo part numbers)
-
-.. image:: img/nucleo_h753zi.jpg
-   :align: center
-   :alt: Nucleo H753ZI
 
 More information about the board can be found at the `Nucleo H753ZI website`_.
 
@@ -91,43 +84,7 @@ Nucleo H753ZI provides the following hardware components:
 Supported Features
 ==================
 
-The Zephyr nucleo_h753zi board configuration supports the following hardware
-features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port                         |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | counter                             |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| RNG       | on-chip    | True Random number generator        |
-+-----------+------------+-------------------------------------+
-| ETHERNET  | on-chip    | ethernet                            |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb_device                          |
-+-----------+------------+-------------------------------------+
-| CAN/CANFD | on-chip    | canbus                              |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_h753zi/nucleo_h753zi_defconfig`
+.. zephyr:board-supported-hw::
 
 For more details please refer to `STM32 Nucleo-144 board User Manual`_.
 

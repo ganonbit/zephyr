@@ -63,11 +63,11 @@ static int dns_dispatch(struct dns_socket_dispatcher *dispatcher,
 	if (is_query) {
 		if (dispatcher->type == DNS_SOCKET_RESPONDER) {
 			/* Call the responder callback */
-			ret = dispatcher->cb(dispatcher->ctx, sock,
+			ret = dispatcher->cb(dispatcher, sock,
 					     addr, addrlen,
 					     dns_data, data_len);
 		} else if (dispatcher->pair) {
-			ret = dispatcher->pair->cb(dispatcher->pair->ctx, sock,
+			ret = dispatcher->pair->cb(dispatcher, sock,
 						   addr, addrlen,
 						   dns_data, data_len);
 		} else {
@@ -81,11 +81,11 @@ static int dns_dispatch(struct dns_socket_dispatcher *dispatcher,
 		 */
 		if (dispatcher->type == DNS_SOCKET_RESOLVER) {
 			/* Call the resolver callback */
-			ret = dispatcher->cb(dispatcher->ctx, sock,
+			ret = dispatcher->cb(dispatcher, sock,
 					     addr, addrlen,
 					     dns_data, data_len);
 		} else if (dispatcher->pair) {
-			ret = dispatcher->pair->cb(dispatcher->pair->ctx, sock,
+			ret = dispatcher->pair->cb(dispatcher, sock,
 						   addr, addrlen,
 						   dns_data, data_len);
 		} else {
@@ -140,9 +140,12 @@ static int recv_data(struct net_socket_service_event *pev)
 	    (pev->event.revents & ZSOCK_POLLNVAL)) {
 		(void)zsock_getsockopt(pev->event.fd, SOL_SOCKET,
 				       SO_ERROR, &sock_error, &optlen);
-		NET_ERR("Receiver IPv%d socket error (%d)",
-			family == AF_INET ? 4 : 6, sock_error);
-		ret = DNS_EAI_SYSTEM;
+		if (sock_error > 0) {
+			NET_ERR("Receiver IPv%d socket error (%d)",
+				family == AF_INET ? 4 : 6, sock_error);
+			ret = DNS_EAI_SYSTEM;
+		}
+
 		goto unlock;
 	}
 
@@ -181,15 +184,13 @@ unlock:
 	return ret;
 }
 
-void dns_dispatcher_svc_handler(struct k_work *work)
+void dns_dispatcher_svc_handler(struct net_socket_service_event *pev)
 {
-	struct net_socket_service_event *pev =
-		CONTAINER_OF(work, struct net_socket_service_event, work);
 	int ret;
 
 	ret = recv_data(pev);
 	if (ret < 0 && ret != DNS_EAI_ALLDONE && ret != -ENOENT) {
-		NET_ERR("DNS recv error (%d)", ret);
+		NET_DBG("DNS recv error (%d)", ret);
 	}
 }
 
@@ -213,7 +214,8 @@ int dns_dispatcher_register(struct dns_socket_dispatcher *ctx)
 		 * already registered.
 		 */
 		if (ctx->type == entry->type &&
-		    ctx->local_addr.sa_family == entry->local_addr.sa_family) {
+		    ctx->local_addr.sa_family == entry->local_addr.sa_family &&
+		    ctx->ifindex == entry->ifindex) {
 			if (net_sin(&entry->local_addr)->sin_port ==
 			    net_sin(&ctx->local_addr)->sin_port) {
 				dup = true;
@@ -331,6 +333,11 @@ int dns_dispatcher_unregister(struct dns_socket_dispatcher *ctx)
 	k_mutex_lock(&lock, K_FOREVER);
 
 	(void)sys_slist_find_and_remove(&sockets, &ctx->node);
+
+	(void)net_socket_service_unregister(ctx->svc);
+
+	/* Mark the context as unregistered */
+	ctx->sock = -1;
 
 	for (int i = 0; i < ctx->fds_len; i++) {
 		CHECKIF((int)ctx->fds[i].fd >= (int)ARRAY_SIZE(dispatch_table)) {

@@ -1,7 +1,4 @@
-.. _imx8mp_evk:
-
-NXP i.MX8MP EVK
-###############
+.. zephyr:board:: imx8mp_evk
 
 Overview
 ********
@@ -64,6 +61,10 @@ features:
 | UART      | on-chip    | serial port                         |
 +-----------+------------+-------------------------------------+
 | ENET      | on-chip    | ethernet port                       |
++-----------+------------+-------------------------------------+
+| GPIO      | on-chip    | GPIO ports                          |
++-----------+------------+-------------------------------------+
+| I2C       | on-chip    | I2C bus                             |
 +-----------+------------+-------------------------------------+
 
 The Zephyr mimx8mp_evk_m7 board configuration supports the following hardware

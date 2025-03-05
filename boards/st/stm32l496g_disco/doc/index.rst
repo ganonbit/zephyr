@@ -1,7 +1,4 @@
-.. _stm32l496g_disco_board:
-
-ST STM32L496G Discovery
-#######################
+.. zephyr:board:: stm32l496g_disco
 
 Overview
 ********
@@ -40,10 +37,6 @@ some highlights of the STM32L496G Discovery board:
 - 8 LEDs
 - Reset push button
 - 4 direction-joystick with selection
-
-.. image:: img/stm32l496g_disco.jpg
-     :align: center
-     :alt: STM32L496G Discovery
 
 More information about the board can be found at the `STM32L496G Discovery website`_.
 
@@ -122,41 +115,7 @@ More information about STM32L496AG can be found in:
 Supported Features
 ==================
 
-The Zephyr stm32l496g_disco board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SDMMC     | on-chip    | disk access                         |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| QSPI NOR  | on-chip    | off-chip flash                      |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb_device                          |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-
-	:zephyr_file:`boards/st/stm32l496g_disco/stm32l496g_disco_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

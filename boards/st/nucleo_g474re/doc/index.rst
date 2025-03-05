@@ -1,7 +1,4 @@
-.. _nucleo_g474re_board:
-
-ST Nucleo G474RE
-################
+.. zephyr:board:: nucleo_g474re
 
 Overview
 ********
@@ -20,10 +17,6 @@ some highlights of the Nucleo G474RE board:
 
 - Three LEDs: USB communication (LD1), power LED (LD3), user LED (LD2)
 - Two push-buttons: RESET and USER
-
-.. image:: img/nucleo_g474re.jpg
-  :align: center
-  :alt: Nucleo G474RE
 
 More information about the board can be found at the `Nucleo G474RE website`_.
 
@@ -95,48 +88,7 @@ More information about STM32G474RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_g474re board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | DAC Controller                      |
-+-----------+------------+-------------------------------------+
-| FLASH     | on-chip    | flash memory                        |
-+-----------+------------+-------------------------------------+
-| COUNTER   | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| FDCAN1    | on-chip    | CAN controller                      |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_g474re/nucleo_g474re_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

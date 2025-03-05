@@ -1,7 +1,4 @@
-.. _xiao_esp32c3:
-
-XIAO ESP32C3
-############
+.. zephyr:board:: xiao_esp32c3
 
 Overview
 ********
@@ -10,12 +7,6 @@ Seeed Studio XIAO ESP32C3 is an IoT mini development board based on the
 Espressif ESP32-C3 WiFi/Bluetooth dual-mode chip.
 
 For more details see the `Seeed Studio XIAO ESP32C3`_ wiki page.
-
-.. figure:: img/xiao_esp32c.jpg
-   :align: center
-   :alt: XIAO ESP32C3
-
-   XIAO ESP32C3
 
 Hardware
 ********
@@ -28,29 +19,7 @@ pinout.
 Supported Features
 ==================
 
-The XIAO ESP32C3 board configuration supports the following hardware features:
-
-+-----------+------------+------------------+
-| Interface | Controller | Driver/Component |
-+===========+============+==================+
-| PMP       | on-chip    | arch/riscv       |
-+-----------+------------+------------------+
-| INTMTRX   | on-chip    | intc_esp32c3     |
-+-----------+------------+------------------+
-| PINMUX    | on-chip    | pinctrl_esp32    |
-+-----------+------------+------------------+
-| USB UART  | on-chip    | serial_esp32_usb |
-+-----------+------------+------------------+
-| GPIO      | on-chip    | gpio_esp32       |
-+-----------+------------+------------------+
-| UART      | on-chip    | uart_esp32       |
-+-----------+------------+------------------+
-| I2C       | on-chip    | i2c_esp32        |
-+-----------+------------+------------------+
-| SPI       | on-chip    | spi_esp32_spim   |
-+-----------+------------+------------------+
-| TWAI      | on-chip    | can_esp32_twai   |
-+-----------+------------+------------------+
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

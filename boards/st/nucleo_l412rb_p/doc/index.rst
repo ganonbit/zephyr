@@ -1,7 +1,4 @@
-.. _nucleo_l412rb_p_board:
-
-ST Nucleo L412RB-P
-##################
+.. zephyr:board:: nucleo_l412rb_p
 
 Overview
 ********
@@ -36,10 +33,6 @@ some highlights of the Nucleo L412RB board:
     - MIPI® debug connector
 
   - Arm® Mbed Enabled |trade| compliant
-
-.. image:: img/nucleo_l412rb_p.jpg
-  :align: center
-  :alt: Nucleo L412RB
 
 More information about the board can be found at the `Nucleo L412RB-P website`_.
 
@@ -135,34 +128,7 @@ More information about STM32L412RB can be found here:
 Supported Features
 ==================
 
-The Zephyr ``nucleo_l412rb_p`` board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l412rb_p/nucleo_l412rb_p_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

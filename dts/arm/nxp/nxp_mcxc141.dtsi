@@ -7,9 +7,11 @@
 #include <nxp/nxp_mcxc_common.dtsi>
 
 &sram0 {
-	reg = <0x1FFFF000 DT_SIZE_K(8)>;
+	reg = <0x1FFFF800 DT_SIZE_K(8)>;
 };
 
 &flash0 {
 	reg = <0 DT_SIZE_K(32)>;
 };
+
+/delete-node/ &usb;

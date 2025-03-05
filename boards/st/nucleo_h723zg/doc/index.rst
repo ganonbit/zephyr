@@ -1,7 +1,4 @@
-.. _nucleo_h723zg_board:
-
-ST Nucleo H723ZG
-################
+.. zephyr:board:: nucleo_h723zg
 
 Overview
 ********
@@ -41,10 +38,6 @@ Key Features
 - On-board ST-LINK/V3 debugger/programmer with USB re-enumeration
 - capability: mass storage, virtual COM port and debug port
 - USB OTG full speed or device only
-
-.. image:: img/nucleo_h723zg.jpg
-   :align: center
-   :alt: Nucleo H723ZG
 
 More information about the board can be found at the `Nucleo H723ZG website`_.
 
@@ -87,43 +80,7 @@ Nucleo H723ZG provides the following hardware components:
 Supported Features
 ==================
 
-The Zephyr nucleo_h723zg board configuration supports the following hardware
-features:
-
-+-------------+------------+-------------------------------------+
-| Interface   | Controller | Driver/Component                    |
-+=============+============+=====================================+
-| NVIC        | on-chip    | nested vector interrupt controller  |
-+-------------+------------+-------------------------------------+
-| UART        | on-chip    | serial port                         |
-+-------------+------------+-------------------------------------+
-| PINMUX      | on-chip    | pinmux                              |
-+-------------+------------+-------------------------------------+
-| GPIO        | on-chip    | gpio                                |
-+-------------+------------+-------------------------------------+
-| RTC         | on-chip    | counter                             |
-+-------------+------------+-------------------------------------+
-| I2C         | on-chip    | i2c                                 |
-+-------------+------------+-------------------------------------+
-| SPI         | on-chip    | spi                                 |
-+-------------+------------+-------------------------------------+
-| PWM         | on-chip    | pwm                                 |
-+-------------+------------+-------------------------------------+
-| ETHERNET    | on-chip    | ethernet                            |
-+-------------+------------+-------------------------------------+
-| RNG         | on-chip    | True Random number generator        |
-+-------------+------------+-------------------------------------+
-| Backup SRAM | on-chip    | Backup SRAM                         |
-+-------------+------------+-------------------------------------+
-| RTC         | on-chip    | rtc                                 |
-+-------------+------------+-------------------------------------+
-| FDCAN1      | on-chip    | CAN-FD Controller                   |
-+-------------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig files:
-:zephyr_file:`boards/st/nucleo_h723zg/nucleo_h723zg_defconfig`
+.. zephyr:board-supported-hw::
 
 For more details please refer to `STM32 Nucleo-144 board User Manual`_.
 

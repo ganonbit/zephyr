@@ -6,6 +6,7 @@
 
 #include <arm/armv7-m.dtsi>
 #include <adi/max32/max32xxx.dtsi>
+#include <zephyr/dt-bindings/dma/max32655_dma.h>
 
 &pinctrl {
 	reg = <0x40008000 0x2400>;
@@ -122,6 +123,14 @@
 				compatible = "adi,max32-counter";
 				status = "disabled";
 			};
+		};
+
+		w1: w1@4003d000 {
+			compatible = "adi,max32-w1";
+			reg = <0x4003d000 0x1000>;
+			clocks = <&gcr ADI_MAX32_CLOCK_BUS1 13>;
+			interrupts = <67 0>;
+			status = "disabled";
 		};
 	};
 };

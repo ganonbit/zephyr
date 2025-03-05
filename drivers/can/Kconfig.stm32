@@ -53,7 +53,7 @@ config CAN_STM32_FDCAN
 	default y
 	depends on DT_HAS_ST_STM32_FDCAN_ENABLED
 	select CAN_MCAN
-	select USE_STM32_LL_RCC
+	select PINCTRL
 
 if CAN_STM32_FDCAN
 
@@ -80,4 +80,4 @@ config CAN_STM32H7_FDCAN
 	default y
 	depends on DT_HAS_ST_STM32H7_FDCAN_ENABLED
 	select CAN_MCAN
-	select USE_STM32_LL_RCC
+	select PINCTRL

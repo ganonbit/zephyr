@@ -130,6 +130,9 @@ void radio_bc_configure(uint32_t n);
 void radio_bc_status_reset(void);
 uint32_t radio_bc_has_match(void);
 
+void isr_radio_tmr(void);
+uint32_t radio_tmr_isr_set(uint32_t start_us, radio_isr_cb_t cb, void *param);
+
 void radio_tmr_status_reset(void);
 void radio_tmr_tx_status_reset(void);
 void radio_tmr_rx_status_reset(void);
@@ -143,8 +146,10 @@ uint32_t radio_tmr_start_tick(uint8_t trx, uint32_t ticks_start);
 uint32_t radio_tmr_start_us(uint8_t trx, uint32_t us);
 uint32_t radio_tmr_start_now(uint8_t trx);
 uint32_t radio_tmr_start_get(void);
+uint32_t radio_tmr_start_latency_get(void);
 void radio_tmr_stop(void);
-void radio_tmr_hcto_configure(uint32_t hcto);
+void radio_tmr_hcto_configure(uint32_t hcto_us);
+void radio_tmr_hcto_configure_abs(uint32_t hcto_from_start_us);
 void radio_tmr_aa_capture(void);
 uint32_t radio_tmr_aa_get(void);
 void radio_tmr_aa_save(uint32_t aa);

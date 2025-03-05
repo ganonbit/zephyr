@@ -1,7 +1,4 @@
-.. _nucleo_g0b1re_board:
-
-ST Nucleo G0B1RE
-################
+.. zephyr:board:: nucleo_g0b1re
 
 Overview
 ********
@@ -27,10 +24,6 @@ some highlights of the Nucleo G0B1RE board:
 - Three LEDs: USB communication (LD1), user LED (LD4), power LED (LD3)
 - Two push-buttons: USER and RESET
 - 32.768 kHz crystal oscillator
-
-.. image:: img/nucleo_g0b1re.jpg
-   :align: center
-   :alt: Nucleo G0B1RE
 
 More information about the board can be found at the `Nucleo G0B1RE website`_.
 
@@ -74,47 +67,7 @@ More information about STM32G0B1RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_g0b1re board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| MPU       | on-chip    | arm memory protection unit          |
-+-----------+------------+-------------------------------------+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| COUNTER   | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | dac                                 |
-+-----------+------------+-------------------------------------+
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| FDCAN     | on-chip    | CAN controller                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_g0b1re/nucleo_g0b1re_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

@@ -1,7 +1,4 @@
-.. _b_l072z_lrwan1_board:
-
-ST B-L072Z-LRWAN1 Discovery kit
-###############################
+.. zephyr:board:: b_l072z_lrwan1
 
 Overview
 ********
@@ -52,10 +49,6 @@ This kit provides:
         - A fault-power LED
         - 2 push-buttons (user and reset)
 - Arduino* Uno V3 connectors
-
-.. image:: img/b_l072z_lrwan1.jpg
-     :align: center
-     :alt: B-L072Z-LRWAN1
 
 More information about the board can be found at the `B-L072Z-LRWAN1 website`_.
 
@@ -115,40 +108,7 @@ More information about STM32L072CZ can be found here:
 Supported Features
 ==================
 
-The Zephyr B-L072Z-LRWAN1 Discovery board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | counter                             |
-+-----------+------------+-------------------------------------+
-| TRNG      | on-chip    | true random number generator        |
-+-----------+------------+-------------------------------------+
-| EEPROM    | on-chip    | eeprom                              |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb                                 |
-+-----------+------------+-------------------------------------+
-| FLASH     | on-chip    | flash                               |
-+-----------+------------+-------------------------------------+
-| LoRa      | on-module  | sx1276                              |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/b_l072z_lrwan1/b_l072z_lrwan1_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

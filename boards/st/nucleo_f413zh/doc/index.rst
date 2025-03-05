@@ -1,7 +1,4 @@
-.. _nucleo_f413zh_board:
-
-ST Nucleo F413ZH
-################
+.. zephyr:board:: nucleo_f413zh
 
 Overview
 ********
@@ -27,10 +24,6 @@ some highlights of the Nucleo F413ZH board:
 
 - Three user LEDs
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f413zh.jpg
-   :align: center
-   :alt: Nucleo F413ZH
 
 More information about the board can be found at the `Nucleo F413ZH website`_.
 
@@ -67,34 +60,7 @@ More information about STM32F413ZH can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_413zh board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f413zh/nucleo_f413zh_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

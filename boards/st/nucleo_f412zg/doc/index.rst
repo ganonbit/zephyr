@@ -1,7 +1,4 @@
-.. _nucleo_f412zg_board:
-
-ST Nucleo F412ZG
-################
+.. zephyr:board:: nucleo_f412zg
 
 Overview
 ********
@@ -27,10 +24,6 @@ some highlights of the Nucleo F412ZG board:
 
 - Three user LEDs
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f412zg.jpg
-   :align: center
-   :alt: Nucleo F412ZG
 
 More information about the board can be found at the `Nucleo F412ZG website`_.
 
@@ -67,34 +60,7 @@ More information about STM32F412ZG can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_412zg board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f412zg/nucleo_f412zg_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

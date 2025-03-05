@@ -41,15 +41,19 @@ uint32_t SystemCoreClock = 16000000U;
 Z_GENERIC_SECTION("stm32wb0_RAM_VR")
 __used RAM_VR_TypeDef RAM_VR;
 
-/** Power Controller node */
+#if defined(CONFIG_BT)
+/**
+ * SRAM0 memory reserved for usage by the MR_BLE Radio hardware.
+ *
+ * N.B.: radio driver defines CFG_BLE_NUM_RADIO_TASKS.
+ */
+Z_GENERIC_SECTION("stm32wb0_BLUE_RAM")
+static uint8_t __used __blue_RAM[sizeof(GLOBALSTATMACH_TypeDef) +
+				 CFG_BLE_NUM_RADIO_TASKS * sizeof(STATMACH_TypeDef)];
+#endif /* CONFIG_BT */
+
+/** Power Controller node (shorthand for upcoming macros) */
 #define PWRC DT_INST(0, st_stm32wb0_pwr)
-
-/** SMPS modes */
-#define STM32WB0_SMPS_MODE_OFF		0
-#define STM32WB0_SMPS_MODE_PRECHARGE	1
-#define STM32WB0_SMPS_MODE_RUN		2
-
-#define SMPS_MODE	_CONCAT(STM32WB0_SMPS_MODE_, DT_STRING_UNQUOTED(PWRC, smps_mode))
 
 /* Convert DTS properties to LL macros */
 #define SMPS_PRESCALER	_CONCAT(LL_RCC_SMPS_DIV_, DT_PROP(PWRC, smps_clock_prescaler))
@@ -142,12 +146,9 @@ static void configure_smps(void)
 /**
  * @brief Perform basic hardware initialization at boot.
  *
- * This needs to be run from the very beginning,
- * so the init priority has to be 0 (zero).
- *
- * @return 0
+ * This needs to be run from the very beginning.
  */
-static int stm32wb0_init(void)
+void soc_early_init_hook(void)
 {
 	/* Update CMSIS SystemCoreClock variable (CLK_SYS) */
 	/* On reset, the 64MHz HSI is selected as input to
@@ -177,8 +178,4 @@ static int stm32wb0_init(void)
 
 	/* Configure SMPS step-down converter */
 	configure_smps();
-
-	return 0;
 }
-
-SYS_INIT(stm32wb0_init, PRE_KERNEL_1, 0);

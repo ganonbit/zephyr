@@ -1,7 +1,4 @@
-.. _nucleo_f410rb_board:
-
-ST Nucleo F410RB
-################
+.. zephyr:board:: nucleo_f410rb
 
 Overview
 ********
@@ -24,10 +21,6 @@ some highlights of the Nucleo F410RB board:
 
 - Three LEDs: USB communication (LD1), user LED (LD2), power LED (LD3)
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f410rb.jpg
-   :align: center
-   :alt: Nucleo F410RB
 
 More information about the board can be found at the `Nucleo F410RB website`_.
 
@@ -64,40 +57,7 @@ More information about STM32F410RB can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_f410rb board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port                         |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| I2S       | on-chip    | i2s                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | DAC Controller                      |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | window & independent                |
-+-----------+------------+-------------------------------------+
-
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f410rb/nucleo_f410rb_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

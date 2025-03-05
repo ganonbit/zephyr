@@ -1,7 +1,4 @@
-.. _nucleo_f401re_board:
-
-ST Nucleo F401RE
-################
+.. zephyr:board:: nucleo_f401re
 
 Overview
 ********
@@ -24,10 +21,6 @@ some highlights of the Nucleo F401RE board:
 
 - Three LEDs: USB communication (LD1), user LED (LD2), power LED (LD3)
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f401re.jpg
-   :align: center
-   :alt: Nucleo F401RE
 
 More information about the board can be found at the `Nucleo F401RE website`_.
 
@@ -63,38 +56,7 @@ More information about STM32F401RE can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_401re board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | System Window Watchdog              |
-+-----------+------------+-------------------------------------+
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f401re/nucleo_f401re_defconfig`
-
+.. zephyr:board-supported-hw:
 
 Pin Mapping
 ===========

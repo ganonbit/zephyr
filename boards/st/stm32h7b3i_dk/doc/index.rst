@@ -1,7 +1,4 @@
-.. _stm32h7b3i_dk_board:
-
-ST STM32H7B3I Discovery kit
-###########################
+.. zephyr:board:: stm32h7b3i_dk
 
 Overview
 ********
@@ -50,10 +47,6 @@ Important board features include:
    - ST-LINK USB VBUS, USB OTG HS connector, or external sources
 - On-board STLINK-V3E debugger/programmer with USB re-enumeration capability
 
-.. image:: img/stm32h7b3i_dk.jpg
-     :align: center
-     :alt: STM32H7B3I-DK
-
 More information about the board can be found at the `STM32H7B3I-DK website`_.
 
 Hardware
@@ -101,42 +94,7 @@ More information about STM32H7B3 can be found here:
 Supported Features
 ==================
 
-The current Zephyr stm32h7b3i_dk board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SDMMC     | on-chip    | disk access                         |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| OSPI NOR  | on-chip    | off-chip flash                      |
-+-----------+------------+-------------------------------------+
-| FLASH     | on-chip    | flash memory                        |
-+-----------+------------+-------------------------------------+
-| FMC       | on-chip    | memc (SDRAM)                        |
-+-----------+------------+-------------------------------------+
-| LTDC      | on-chip    | display                             |
-+-----------+------------+-------------------------------------+
-| CANFD     | on-chip    | can                                 |
-+-----------+------------+-------------------------------------+
-
-
-Other hardware features have not been enabled yet for this board.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/stm32h7b3i_dk/stm32h7b3i_dk_defconfig`
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

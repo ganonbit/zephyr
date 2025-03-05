@@ -15,6 +15,8 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+#define IRC48M_CLK_FREQ (48000000UL)
+
 #define MCG_NODE DT_NODELABEL(mcg)
 #define OSC_NODE DT_NODELABEL(osc)
 
@@ -81,7 +83,7 @@ const osc_config_t oscConfig_BOARD_BootClockRUN = {
 	}
 };
 
-static void clock_init(void)
+__weak void clock_init(void)
 {
 	/* Set the system clock dividers in SIM to safe value. */
 	CLOCK_SetSimSafeDivs();
@@ -94,9 +96,13 @@ static void clock_init(void)
 	CLOCK_SetSimConfig(&simConfig_BOARD_BootClockRUN);
 	/* Set SystemCoreClock variable. */
 	SystemCoreClock = DT_PROP(DT_NODELABEL(cpu0), clock_frequency);
-	/* Set LPUART0 clock source. */
 #if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(lpuart0))
+	/* Set LPUART0 clock source. */
 	CLOCK_SetLpuart0Clock(LPUART_CLOCK_SEL(lpuart0));
+#endif
+#if DT_NODE_HAS_STATUS_OKAY(DT_NODELABEL(lpuart1))
+	/* Set LPUART1 clock source. */
+	CLOCK_SetLpuart1Clock(LPUART_CLOCK_SEL(lpuart1));
 #endif
 #if DT_HAS_COMPAT_STATUS_OKAY(nxp_kinetis_tpm)
 	/* All TPM instances share common clock source for counter clock.
@@ -105,10 +111,18 @@ static void clock_init(void)
 	 */
 	CLOCK_SetTpmClock(TPM_CLOCK_SEL(DT_COMPAT_GET_ANY_STATUS_OKAY(nxp_kinetis_tpm)));
 #endif
+#if CONFIG_USB_KINETIS || CONFIG_UDC_KINETIS
+	CLOCK_EnableUsbfs0Clock(kCLOCK_UsbSrcIrc48M, IRC48M_CLK_FREQ);
+#endif
 }
 
 void soc_early_init_hook(void)
 {
+#ifdef CONFIG_TEMP_KINETIS
+	/* enable bandgap buffer */
+	PMC->REGSC |= PMC_REGSC_BGBE_MASK;
+#endif /* CONFIG_TEMP_KINETIS */
+
 	clock_init();
 }
 

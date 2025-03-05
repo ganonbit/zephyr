@@ -1,7 +1,4 @@
-.. _raytac_mdbt53v_db_40_nrf5340:
-
-Raytac MDBT53V-DB-40
-####################
+.. zephyr:board:: raytac_mdbt53v_db_40
 
 Overview
 ********
@@ -42,13 +39,6 @@ nRF5340 SoC provides support for the following devices:
 * :abbr:`UARTE (Universal asynchronous receiver-transmitter)`
 * :abbr:`WDT (Watchdog Timer)`
 
-.. figure:: img/MDBT53V-DB-40.jpg
-     :width: 442px
-     :align: center
-     :alt: MDBT53V-DB-40
-
-     MDBT53V-DB-40 (Credit: Raytac Corporation)
-
 More information about the board can be found at the `MDBT53V-DB-40 website`_.
 The `MDBT53V-DB-40 Specification`_ contains the demo board's datasheet.
 The `MDBT53V-DB-40 Schematic`_ contains the demo board's schematic.
@@ -57,7 +47,7 @@ Hardware
 ********
 - Module Demo Board build by MDBT53V-1M
 - Nordic nRF5340 SoC Solution
-- A recommnded 3rd-party module by Nordic Semiconductor.
+- A recommended 3rd-party module by Nordic Semiconductor.
 - Dual-core Arm® Cortex® M33
 - 1MB/256KB Flash Memory; 512kB/ 64kB RAM
 - Supports BT5 Long Range Features
@@ -74,8 +64,8 @@ Hardware
 - 1 User LEDs
 - 3 User buttons
 - 1 Mini USB connector for power supply
-- SWD connector for FW programing
-- J-Link interface for FW programing
+- SWD connector for FW programming
+- J-Link interface for FW programming
 
 Supported Features
 ==================
@@ -248,6 +238,8 @@ J-Link OB IF to debug.
 
 References
 **********
+
+.. target-notes::
 
 .. _IDAU:
    https://developer.arm.com/docs/100690/latest/attribution-units-sau-and-idau

@@ -1,7 +1,4 @@
-.. _nucleo_l432kc_board:
-
-ST Nucleo L432KC
-################
+.. zephyr:board:: nucleo_l432kc
 
 Overview
 ********
@@ -20,10 +17,6 @@ some highlights of the Nucleo L432KC board:
 
 - Three LEDs: USB communication (LD1), power LED (LD2), user LED (LD3)
 - One push-button: RESET
-
-.. image:: img/nucleo_l432kc.jpg
-  :align: center
-  :alt: Nucleo L432KC
 
 More information about the board can be found at the `Nucleo L432KC website`_.
 
@@ -96,34 +89,9 @@ More information about STM32L432KC can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_l432kc board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| CAN       | on-chip    | can                                 |
-+-----------+------------+-------------------------------------+
+.. zephyr:board-supported-hw::
 
 .. note:: CAN feature requires CAN transceiver
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l432kc/nucleo_l432kc_defconfig`
-
 
 Connections and IOs
 ===================

@@ -1,7 +1,4 @@
-.. _nucleo_g431rb_board:
-
-ST Nucleo G431RB
-################
+.. zephyr:board:: nucleo_g431rb
 
 Overview
 ********
@@ -20,10 +17,6 @@ some highlights of the Nucleo G431RB board:
 
 - Three LEDs: USB communication (LD1), power LED (LD3), user LED (LD2)
 - Two push-buttons: RESET and USER
-
-.. image:: img/nucleo_g431rb.jpg
-  :align: center
-  :alt: Nucleo G431RB
 
 More information about the board can be found at the `Nucleo G431RB website`_.
 
@@ -95,38 +88,7 @@ More information about STM32G431RB can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_g431rb board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | dac                                 |
-+-----------+------------+-------------------------------------+
-| COUNTER   | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| RNG       | on-chip    | rng                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_g431rb/nucleo_g431rb_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

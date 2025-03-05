@@ -1,7 +1,4 @@
-.. _nucleo_l011k4_board:
-
-ST Nucleo L011K4
-################
+.. zephyr:board:: nucleo_l011k4
 
 Overview
 ********
@@ -20,10 +17,6 @@ The STM32 Nucleo board integrates the ST-LINK/V2-1 debugger and programmer.
 The STM32 Nucleo board comes with the STM32 comprehensive software HAL library together
 with various packaged software examples.
 
-.. image:: img/nucleo_l011k4.jpg
-   :align: center
-   :alt: Nucleo L011K4
-
 More information about the board can be found at the `Nucleo L011K4 website`_.
 
 Hardware
@@ -35,7 +28,6 @@ Nucleo L011K4 provides the following hardware components:
 
   - Arduino* Nano V3 connectivity
 
-- ARM* mbed*
 - On-board ST-LINK/V2-1 debugger/programmer with SWD connector:
 
   - Selection-mode switch to use the kit as a standalone ST-LINK/V2-1
@@ -56,11 +48,6 @@ Nucleo L011K4 provides the following hardware components:
   - Mass storage
   - Debug port
 
-- Support of wide choice of Integrated Development Environments (IDEs) including:
-
-  - IAR
-  - ARM Keil
-  - GCC-based IDEs
 
 More information about STM32L011K4 can be found in the
 `STM32L0x1 reference manual`_
@@ -69,33 +56,7 @@ More information about STM32L011K4 can be found in the
 Supported Features
 ==================
 
-The Zephyr nucleo_l011k4 board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c controller                      |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi controller                      |
-+-----------+------------+-------------------------------------+
-| EEPROM    | on-chip    | eeprom                              |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l011k4/nucleo_l011k4_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

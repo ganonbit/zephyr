@@ -1,7 +1,4 @@
-.. _stm32f411e_disco_board:
-
-ST STM32F411E Discovery
-#######################
+.. zephyr:board:: stm32f411e_disco
 
 Overview
 ********
@@ -28,10 +25,6 @@ Here are some highlights of the STM32F411E-DISCO board:
 - Two pushbuttons (user and reset)
 - USB OTG with micro-AB connector
 - Extension header for LQFP100 I/Os for a quick connection to the prototyping board and an easy probing
-
-.. image:: img/stm32f411e_disco.jpg
-     :align: center
-     :alt: STM32F411E-DISCO
 
 More information about the board can be found at the `32F411EDISCOVERY website`_.
 
@@ -66,29 +59,7 @@ More information about STM32F411VE can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32f411e_disco board configuration supports the following
-hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32f411e_disco/stm32f411e_disco_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

@@ -18,4 +18,6 @@ supported:
   - counter
   - adc
   - i2c
+  - dma
+  - pwm
 vendor: nxp

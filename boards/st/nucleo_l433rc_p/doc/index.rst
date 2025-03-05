@@ -1,7 +1,4 @@
-.. _nucleo_l433rc_board:
-
-ST Nucleo L433RC
-################
+.. zephyr:board:: nucleo_l433rc_p
 
 Overview
 ********
@@ -20,10 +17,6 @@ some highlights of the Nucleo L433RC board:
 
 - Three LEDs: USB communication (LD1), power LED (LD3), user LED (LD4)
 - One push-button: RESET
-
-.. image:: img/nucleo_l433rc_p.jpg
-  :align: center
-  :alt: Nucleo L433RC
 
 More information about the board can be found at the `Nucleo L433RC-P website`_.
 
@@ -97,36 +90,9 @@ More information about STM32L433RC can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_l433rc_p board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| CAN       | on-chip    | can                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
+.. zephyr:board-supported-hw::
 
 .. note:: CAN feature requires CAN transceiver
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l433rc_p/nucleo_l433rc_p_defconfig`
-
 
 Connections and IOs
 ===================

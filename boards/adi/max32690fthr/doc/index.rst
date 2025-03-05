@@ -1,7 +1,4 @@
-.. _max32690_fthr:
-
-MAX32690FTHR
-############
+.. zephyr:board:: max32690fthr
 
 Overview
 ********
@@ -85,6 +82,8 @@ Below interfaces are supported by Zephyr on MAX32690FTHR.
 +-----------+------------+-------------------------------------+
 | SPI       | on-chip    | spi                                 |
 +-----------+------------+-------------------------------------+
+| Flash     | on-chip    | flash                               |
++-----------+------------+-------------------------------------+
 
 Programming and Debugging
 *************************
@@ -98,7 +97,8 @@ Logic levels are fixed to VDDIO (1.8V).
 
 Once the debug probe is connected to your host computer, then you can run the
 ``west flash`` command to write a firmware image into flash. Here is an example
-for the :zephyr:code-sample:`hello_world` application.
+for the :zephyr:code-sample:`hello_world` application. To perform a full erase,
+pass the ``--erase`` option when executing ``west flash``.
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world
@@ -128,7 +128,7 @@ session. Here is an example for the :zephyr:code-sample:`hello_world` applicatio
 References
 **********
 
-- `MAX32690 product page`_
+- `MAX32690 solution center`_
 
-.. _MAX32690 product page:
-   https://www.analog.com/en/products/max32690.html
+.. _MAX32690 solution center:
+   https://developer.analog.com/solutions/max32690

@@ -1,7 +1,4 @@
-.. _nucleo_l496zg_board:
-
-ST Nucleo L496ZG
-################
+.. zephyr:board:: nucleo_l496zg
 
 Overview
 ********
@@ -27,10 +24,6 @@ some highlights of the Nucleo L476ZG board:
 - 8 LEDs: user LEDs (LD1, LD2, LD3), communication LED (LD4), USB
   power fault(LD5), power LED (LD6), USB FS OTG (LD7, LD8)
 - 2 push buttons: USER and RESET
-
-.. image:: img/nucleo_l496zg.jpg
-   :align: center
-   :alt: Nucleo L496ZG
 
 More information about the board can be found at the `Nucleo L496ZG website`_.
 
@@ -105,38 +98,7 @@ More information about STM32L496ZG can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_l496zg board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| OTG FS    | on-chip    | USB OTG Full-speed                  |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | System Window Watchdog              |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l496zg/nucleo_l496zg_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

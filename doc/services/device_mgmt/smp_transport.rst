@@ -8,10 +8,10 @@ side SMP transports.
 
 .. _mcumgr_smp_transport_ble:
 
-BLE (Bluetooth Low Energy)
-**************************
+Bluetooth Low Energy (LE)
+*************************
 
-MCUmgr Clients need to use following BLE Characteristics, when implementing
+MCUmgr Clients need to use following Bluetooth Characteristics, when implementing
 SMP client:
 
 - **Service UUID**: ``8D53DC1D-1DB7-4CD3-868B-8A527460AA84``
@@ -179,7 +179,7 @@ taking form:
     | Content       | Size          | Description               |
     +===============+===============+===========================+
     | body          | no more than  | Raw body data fragment    |
-    |               | MTU - 3       |                           |
+    |               | MTU - 5       |                           |
     +---------------+---------------+---------------------------+
     | crc16         | 2 bytes       | CRC16 of entire packet    |
     |               |               | body, preceding length    |

@@ -4,6 +4,7 @@
 
 /*
  * Copyright (c) 2015-2016 Intel Corporation
+ * Copyright (c) 2025 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -74,9 +75,9 @@ struct bt_le_conn_param {
  *    Latency: 0
  *    Timeout: 4 s
  */
-#define BT_LE_CONN_PARAM_DEFAULT BT_LE_CONN_PARAM(BT_GAP_INIT_CONN_INT_MIN, \
-						  BT_GAP_INIT_CONN_INT_MAX, \
-						  0, 400)
+#define BT_LE_CONN_PARAM_DEFAULT                                                                   \
+	BT_LE_CONN_PARAM(BT_GAP_INIT_CONN_INT_MIN, BT_GAP_INIT_CONN_INT_MAX, 0,                    \
+			 BT_GAP_MS_TO_CONN_TIMEOUT(4000))
 
 /** Connection PHY information for LE connections */
 struct bt_conn_le_phy_info {
@@ -410,7 +411,7 @@ struct bt_conn_le_cs_capabilities {
 
 /** Remote FAE Table for LE connections supporting CS */
 struct bt_conn_le_cs_fae_table {
-	uint8_t *remote_fae_table;
+	int8_t *remote_fae_table;
 };
 
 /** Channel sounding main mode */
@@ -657,6 +658,9 @@ struct bt_conn_le_cs_subevent_result {
 		 */
 		uint8_t abort_step;
 	} header;
+	/** Pointer to buffer containing step data.
+	 *  NULL if num_steps_reported is 0.
+	 */
 	struct net_buf_simple *step_data_buf;
 };
 
@@ -719,7 +723,7 @@ struct bt_conn *bt_conn_lookup_addr_le(uint8_t id, const bt_addr_le_t *peer);
  *
  *  @param conn Connection object.
  *
- *  @return Destination address.
+ *  @return Destination address if @p conn is a valid @ref BT_CONN_TYPE_LE connection
  */
 const bt_addr_le_t *bt_conn_get_dst(const struct bt_conn *conn);
 
@@ -1038,9 +1042,20 @@ enum bt_conn_auth_keypress {
  */
 int bt_conn_get_info(const struct bt_conn *conn, struct bt_conn_info *info);
 
+/** @brief Function to determine the type of a connection
+ *
+ *  @param conn The connection object
+ *  @param type The types to check against. It is possible to supply multiple types,
+ *              e.g. BT_CONN_TYPE_LE | BT_CONN_TYPE_SCO.
+ *
+ *  @retval true @p conn is of type @p type
+ *  @retval false @p conn is either NULL or not of type @p type
+ */
+bool bt_conn_is_type(const struct bt_conn *conn, enum bt_conn_type type);
+
 /** @brief Get connection info for the remote device.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *  @param remote_info Connection remote info object.
  *
  *  @note In order to retrieve the remote version (version, manufacturer
@@ -1052,51 +1067,56 @@ int bt_conn_get_info(const struct bt_conn *conn, struct bt_conn_info *info);
  *
  *  @return Zero on success or (negative) error code on failure.
  *  @return -EBUSY The remote information is not yet available.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection.
  */
 int bt_conn_get_remote_info(struct bt_conn *conn,
 			    struct bt_conn_remote_info *remote_info);
 
 /** @brief Get connection transmit power level.
  *
- *  @param conn           Connection object.
+ *  @param conn           @ref BT_CONN_TYPE_LE connection object.
  *  @param tx_power_level Transmit power level descriptor.
  *
  *  @return Zero on success or (negative) error code on failure.
  *  @return -ENOBUFS HCI command buffer is not available.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_get_tx_power_level(struct bt_conn *conn,
 				  struct bt_conn_le_tx_power *tx_power_level);
 
 /** @brief Get local enhanced connection transmit power level.
  *
- *  @param conn           Connection object.
+ *  @param conn           @ref BT_CONN_TYPE_LE connection object.
  *  @param tx_power       Transmit power level descriptor.
  *
  *  @return Zero on success or (negative) error code on failure.
  *  @retval -ENOBUFS HCI command buffer is not available.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_enhanced_get_tx_power_level(struct bt_conn *conn,
 					   struct bt_conn_le_tx_power *tx_power);
 
 /** @brief Get remote (peer) transmit power level.
  *
- *  @param conn           Connection object.
+ *  @param conn           @ref BT_CONN_TYPE_LE connection object.
  *  @param phy            PHY information.
  *
  *  @return Zero on success or (negative) error code on failure.
  *  @retval -ENOBUFS HCI command buffer is not available.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_get_remote_tx_power_level(struct bt_conn *conn,
 					 enum bt_conn_le_tx_power_phy phy);
 
 /** @brief Enable transmit power reporting.
  *
- *  @param conn           Connection object.
+ *  @param conn           @ref BT_CONN_TYPE_LE connection object.
  *  @param local_enable   Enable/disable reporting for local.
  *  @param remote_enable  Enable/disable reporting for remote.
  *
  *  @return Zero on success or (negative) error code on failure.
  *  @retval -ENOBUFS HCI command buffer is not available.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_set_tx_power_report_enable(struct bt_conn *conn,
 					  bool local_enable,
@@ -1108,10 +1128,11 @@ int bt_conn_le_set_tx_power_report_enable(struct bt_conn *conn,
  *
  *  @note To use this API @kconfig{CONFIG_BT_PATH_LOSS_MONITORING} must be set.
  *
- *  @param conn  Connection object.
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param param Path Loss Monitoring parameters
  *
  *  @return Zero on success or (negative) error code on failure.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_set_path_loss_mon_param(struct bt_conn *conn,
 				       const struct bt_conn_le_path_loss_reporting_param *param);
@@ -1123,10 +1144,11 @@ int bt_conn_le_set_path_loss_mon_param(struct bt_conn *conn,
  *
  * @note To use this API @kconfig{CONFIG_BT_PATH_LOSS_MONITORING} must be set.
  *
- * @param conn   Connection Object.
+ * @param conn  @ref BT_CONN_TYPE_LE connection object.
  * @param enable Enable/disable path loss reporting.
  *
  * @return Zero on success or (negative) error code on failure.
+ * @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_set_path_loss_mon_enable(struct bt_conn *conn, bool enable);
 
@@ -1152,10 +1174,11 @@ int bt_conn_le_subrate_set_defaults(const struct bt_conn_le_subrate_param *param
  *
  *  @note To use this API @kconfig{CONFIG_BT_SUBRATING} must be set.
  *
- *  @param conn   Connection object.
+ *  @param conn   @ref BT_CONN_TYPE_LE connection object.
  *  @param params Subrating parameters.
  *
  *  @return Zero on success or (negative) error code on failure.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_subrate_request(struct bt_conn *conn,
 			       const struct bt_conn_le_subrate_param *params);
@@ -1166,20 +1189,22 @@ int bt_conn_le_subrate_request(struct bt_conn *conn,
  *  parameters will be delayed. This delay can be configured by through the
  *  @kconfig{CONFIG_BT_CONN_PARAM_UPDATE_TIMEOUT} option.
  *
- *  @param conn Connection object.
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param param Updated connection parameters.
  *
  *  @return Zero on success or (negative) error code on failure.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_param_update(struct bt_conn *conn,
 			    const struct bt_le_conn_param *param);
 
 /** @brief Update the connection transmit data length parameters.
  *
- *  @param conn  Connection object.
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param param Updated data length parameters.
  *
  *  @return Zero on success or (negative) error code on failure.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_data_len_update(struct bt_conn *conn,
 			       const struct bt_conn_le_data_len_param *param);
@@ -1189,10 +1214,11 @@ int bt_conn_le_data_len_update(struct bt_conn *conn,
  *  Update the preferred transmit and receive PHYs of the connection.
  *  Use @ref BT_GAP_LE_PHY_NONE to indicate no preference.
  *
- *  @param conn Connection object.
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param param Updated connection parameters.
  *
  *  @return Zero on success or (negative) error code on failure.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_conn_le_phy_update(struct bt_conn *conn,
 			  const struct bt_conn_le_phy_param *param);
@@ -1336,7 +1362,9 @@ struct bt_conn_le_create_param {
  *  Allows initiate new LE link to remote peer using its address.
  *
  *  The caller gets a new reference to the connection object which must be
- *  released with bt_conn_unref() once done using the object.
+ *  released with bt_conn_unref() once done using the object. If
+ *  @kconfig{CONFIG_BT_CONN_CHECK_NULL_BEFORE_CREATE} is enabled, this function
+ *  will return -EINVAL if dereferenced @p conn is not NULL.
  *
  *  This uses the General Connection Establishment procedure.
  *
@@ -1375,7 +1403,9 @@ struct bt_conn_le_create_synced_param {
  *  with Responses (PAwR) train.
  *
  *  The caller gets a new reference to the connection object which must be
- *  released with bt_conn_unref() once done using the object.
+ *  released with bt_conn_unref() once done using the object. If
+ *  @kconfig{CONFIG_BT_CONN_CHECK_NULL_BEFORE_CREATE} is enabled, this function
+ *  will return -EINVAL if dereferenced @p conn is not NULL.
  *
  *  This uses the Periodic Advertising Connection Procedure.
  *
@@ -1428,8 +1458,8 @@ int bt_conn_create_auto_stop(void);
  *
  *  @return Zero on success or error code otherwise.
  */
-int bt_le_set_auto_conn(const bt_addr_le_t *addr,
-			const struct bt_le_conn_param *param);
+__deprecated int bt_le_set_auto_conn(const bt_addr_le_t *addr,
+				     const struct bt_le_conn_param *param);
 
 /** @brief Set security level for a connection.
  *
@@ -1462,16 +1492,22 @@ int bt_le_set_auto_conn(const bt_addr_le_t *addr,
  *  @note When @ref BT_SECURITY_FORCE_PAIR within @p sec is enabled then the pairing
  *        procedure will always be initiated.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *  @param sec Requested minimum security level.
  *
  *  @return 0 on success or negative error
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection.
  */
 int bt_conn_set_security(struct bt_conn *conn, bt_security_t sec);
 
 /** @brief Get security level for a connection.
  *
- *  @return Connection security level
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
+ *
+ *  @return Connection security level if @kconfig{CONFIG_BT_SMP} or @kconfig{CONFIG_BT_CLASSIC} is
+ *          enabled, else @ref BT_SECURITY_L1
+ *  @return @ref BT_SECURITY_L0 @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR
+ *          connection.
  */
 bt_security_t bt_conn_get_security(const struct bt_conn *conn);
 
@@ -1480,9 +1516,10 @@ bt_security_t bt_conn_get_security(const struct bt_conn *conn);
  *  This function gets encryption key size.
  *  If there is no security (encryption) enabled 0 will be returned.
  *
- *  @param conn Existing connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *
  *  @return Encryption key size.
+ *  @return 0 @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection.
  */
 uint8_t bt_conn_enc_key_size(const struct bt_conn *conn);
 
@@ -1516,6 +1553,86 @@ enum bt_security_err {
 
 	/** Pairing failed but the exact reason could not be specified. */
 	BT_SECURITY_ERR_UNSPECIFIED,
+};
+
+enum bt_conn_le_cs_procedure_enable_state {
+	BT_CONN_LE_CS_PROCEDURES_DISABLED = BT_HCI_OP_LE_CS_PROCEDURES_DISABLED,
+	BT_CONN_LE_CS_PROCEDURES_ENABLED = BT_HCI_OP_LE_CS_PROCEDURES_ENABLED,
+};
+
+/** CS Test Tone Antennna Config Selection.
+ *
+ *  These enum values are indices in the following table, where N_AP is the maximum
+ *  number of antenna paths (in the range [1, 4]).
+ *
+ * +--------------+-------------+-------------------+-------------------+--------+
+ * | Config Index | Total Paths | Dev A: # Antennas | Dev B: # Antennas | Config |
+ * +--------------+-------------+-------------------+-------------------+--------+
+ * |            0 |           1 |                 1 |                 1 | 1:1    |
+ * |            1 |           2 |                 2 |                 1 | N_AP:1 |
+ * |            2 |           3 |                 3 |                 1 | N_AP:1 |
+ * |            3 |           4 |                 4 |                 1 | N_AP:1 |
+ * |            4 |           2 |                 1 |                 2 | 1:N_AP |
+ * |            5 |           3 |                 1 |                 3 | 1:N_AP |
+ * |            6 |           4 |                 1 |                 4 | 1:N_AP |
+ * |            7 |           4 |                 2 |                 2 | 2:2    |
+ * +--------------+-------------+-------------------+-------------------+--------+
+ *
+ *  There are therefore four groups of possible antenna configurations:
+ *
+ *  - 1:1 configuration, where both A and B support 1 antenna each
+ *  - 1:N_AP configuration, where A supports 1 antenna, B supports N_AP antennas, and
+ *    N_AP is a value in the range [2, 4]
+ *  - N_AP:1 configuration, where A supports N_AP antennas, B supports 1 antenna, and
+ *    N_AP is a value in the range [2, 4]
+ *  - 2:2 configuration, where both A and B support 2 antennas and N_AP = 4
+ */
+enum bt_conn_le_cs_tone_antenna_config_selection {
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_ONE = BT_HCI_OP_LE_CS_ACI_0,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_TWO = BT_HCI_OP_LE_CS_ACI_1,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_THREE = BT_HCI_OP_LE_CS_ACI_2,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_FOUR = BT_HCI_OP_LE_CS_ACI_3,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_FIVE = BT_HCI_OP_LE_CS_ACI_4,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_SIX = BT_HCI_OP_LE_CS_ACI_5,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_SEVEN = BT_HCI_OP_LE_CS_ACI_6,
+	BT_LE_CS_TONE_ANTENNA_CONFIGURATION_INDEX_EIGHT = BT_HCI_OP_LE_CS_ACI_7,
+};
+
+struct bt_conn_le_cs_procedure_enable_complete {
+	/* The ID associated with the desired configuration (0 to 3) */
+	uint8_t config_id;
+
+	/* State of the CS procedure */
+	enum bt_conn_le_cs_procedure_enable_state state;
+
+	/* Antenna configuration index */
+	enum bt_conn_le_cs_tone_antenna_config_selection tone_antenna_config_selection;
+
+	/* Transmit power level used for CS procedures (-127 to 20 dB; 0x7F if unavailable) */
+	int8_t selected_tx_power;
+
+	/* Duration of each CS subevent in microseconds (1250 us to 4 s) */
+	uint32_t subevent_len;
+
+	/* Number of CS subevents anchored off the same ACL connection event (0x01 to 0x20) */
+	uint8_t subevents_per_event;
+
+	/* Time between consecutive CS subevents anchored off the same ACL connection event in
+	 * units of 0.625 ms
+	 */
+	uint16_t subevent_interval;
+
+	/* Number of ACL connection events between consecutive CS event anchor points */
+	uint16_t event_interval;
+
+	/* Number of ACL connection events between consecutive CS procedure anchor points */
+	uint16_t procedure_interval;
+
+	/* Number of CS procedures to be scheduled (0 if procedures to continue until disabled) */
+	uint16_t procedure_count;
+
+	/* Maximum duration for each procedure in units of 0.625 ms (0x0001 to 0xFFFF) */
+	uint16_t max_procedure_len;
 };
 
 /** @brief Connection callback structure.
@@ -1810,6 +1927,27 @@ struct bt_conn_cb {
 	 */
 	void (*le_cs_subevent_data_available)(struct bt_conn *conn,
 					      struct bt_conn_le_cs_subevent_result *result);
+
+	/** @brief LE CS Security Enabled.
+	 *
+	 *  This callback notifies the application that a Channel Sounding
+	 *  Security Enable procedure has completed
+	 *
+	 *  @param conn Connection object.
+	 */
+	void (*le_cs_security_enabled)(struct bt_conn *conn);
+
+	/** @brief LE CS Procedure Enabled.
+	 *
+	 *  This callback notifies the application that a Channel Sounding
+	 *  Procedure Enable procedure has completed
+	 *
+	 *  @param conn Connection object.
+	 *  @param params CS Procedure Enable parameters
+	 */
+	void (*le_cs_procedure_enabled)(
+		struct bt_conn *conn, struct bt_conn_le_cs_procedure_enable_complete *params);
+
 #endif
 
 	/** @internal Internally used field for list handling */
@@ -1905,8 +2043,13 @@ bool bt_get_bondable(void);
  *  The default value of the global configuration is defined using
  *  CONFIG_BT_BONDABLE Kconfig option.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *  @param enable Value allowing/disallowing to be bondable.
+ *
+ *  @retval 0 Success
+ *  @retval -EALREADY Already in the requested state
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
+ *  @return -EINVAL @p conn is a valid @ref BT_CONN_TYPE_LE but could not get SMP context
  */
 int bt_conn_set_bondable(struct bt_conn *conn, bool enable);
 
@@ -1932,10 +2075,12 @@ void bt_le_oob_set_legacy_flag(bool enable);
  *  The function should only be called in response to the oob_data_request()
  *  callback provided that the legacy method is user pairing.
  *
- *  @param conn Connection object
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param tk Pointer to 16 byte long TK array
  *
- *  @return Zero on success or -EINVAL if NULL
+ *  @retval 0 Success
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
+ *  @return -EINVAL @p tk is NULL.
  */
 int bt_le_oob_set_legacy_tk(struct bt_conn *conn, const uint8_t *tk);
 
@@ -1950,12 +2095,13 @@ int bt_le_oob_set_legacy_tk(struct bt_conn *conn, const uint8_t *tk);
  *  data present, with only remote OOB data present or with both local and
  *  remote OOB data present.
  *
- *  @param conn Connection object
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param oobd_local Local OOB data or NULL if not present
  *  @param oobd_remote Remote OOB data or NULL if not present
  *
  *  @return Zero on success or error code otherwise, positive in case of
  *          protocol error or negative (POSIX) in case of stack internal error.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_le_oob_set_sc_data(struct bt_conn *conn,
 			  const struct bt_le_oob_sc_data *oobd_local,
@@ -1969,12 +2115,13 @@ int bt_le_oob_set_sc_data(struct bt_conn *conn,
  *  @note The OOB data will only be available as long as the connection object
  *  associated with it is valid.
  *
- *  @param conn Connection object
+ *  @param conn  @ref BT_CONN_TYPE_LE connection object.
  *  @param oobd_local Local OOB data or NULL if not set
  *  @param oobd_remote Remote OOB data or NULL if not set
  *
  *  @return Zero on success or error code otherwise, positive in case of
  *          protocol error or negative (POSIX) in case of stack internal error.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection.
  */
 int bt_le_oob_get_sc_data(struct bt_conn *conn,
 			  const struct bt_le_oob_sc_data **oobd_local,
@@ -2090,7 +2237,8 @@ struct bt_conn_auth_cb {
 	 *  This callback may be unregistered in which case pairing continues
 	 *  as if the Kconfig flag was not set.
 	 *
-	 *  This callback is not called for BR/EDR Secure Simple Pairing (SSP).
+	 *  For BR/EDR Secure Simple Pairing (SSP), this callback is called
+	 *  when receiving the BT_HCI_EVT_IO_CAPA_REQ hci event.
 	 *
 	 *  @param conn Connection where pairing is initiated.
 	 *  @param feat Pairing req/resp info.
@@ -2319,10 +2467,11 @@ int bt_conn_auth_cb_register(const struct bt_conn_auth_cb *cb);
  *  security procedures in the SMP module have already started. This function
  *  can be called only once per connection.
  *
- *  @param conn	Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *  @param cb	Callback struct.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_cb_overlay(struct bt_conn *conn, const struct bt_conn_auth_cb *cb);
 
@@ -2352,10 +2501,11 @@ int bt_conn_auth_info_cb_unregister(struct bt_conn_auth_info_cb *cb);
  *  This function should be called only after passkey_entry callback from
  *  bt_conn_auth_cb structure was called.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *  @param passkey Entered passkey.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_passkey_entry(struct bt_conn *conn, unsigned int passkey);
 
@@ -2366,13 +2516,14 @@ int bt_conn_auth_passkey_entry(struct bt_conn *conn, unsigned int passkey);
  *
  *  Requires @kconfig{CONFIG_BT_PASSKEY_KEYPRESS}.
  *
- *  @param conn Destination for the notification.
+ *  @param conn @ref BT_CONN_TYPE_LE destination connection for the notification.
  *  @param type What keypress event type to send. @see bt_conn_auth_keypress.
  *
  *  @retval 0 Success
  *  @retval -EINVAL Improper use of the API.
  *  @retval -ENOMEM Failed to allocate.
  *  @retval -ENOBUFS Failed to allocate.
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE connection
  */
 int bt_conn_auth_keypress_notify(struct bt_conn *conn, enum bt_conn_auth_keypress type);
 
@@ -2380,9 +2531,10 @@ int bt_conn_auth_keypress_notify(struct bt_conn *conn, enum bt_conn_auth_keypres
  *
  *  This function allows to cancel ongoing authenticated pairing.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_cancel(struct bt_conn *conn);
 
@@ -2391,9 +2543,10 @@ int bt_conn_auth_cancel(struct bt_conn *conn);
  *  This function should be called only after passkey_confirm callback from
  *  bt_conn_auth_cb structure was called.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_passkey_confirm(struct bt_conn *conn);
 
@@ -2402,9 +2555,10 @@ int bt_conn_auth_passkey_confirm(struct bt_conn *conn);
  *  This function should be called only after pairing_confirm callback from
  *  bt_conn_auth_cb structure was called if user confirmed incoming pairing.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection object.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_LE or @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_pairing_confirm(struct bt_conn *conn);
 
@@ -2413,10 +2567,11 @@ int bt_conn_auth_pairing_confirm(struct bt_conn *conn);
  *  This function should be called only after PIN code callback from
  *  bt_conn_auth_cb structure was called. It's for legacy 2.0 devices.
  *
- *  @param conn Connection object.
+ *  @param conn @ref BT_CONN_TYPE_BR connection object.
  *  @param pin Entered PIN code.
  *
  *  @return Zero on success or negative error code otherwise
+ *  @return -EINVAL @p conn is not a valid @ref BT_CONN_TYPE_BR connection
  */
 int bt_conn_auth_pincode_entry(struct bt_conn *conn, const char *pin);
 

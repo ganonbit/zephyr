@@ -1,7 +1,4 @@
-.. _nucleo_l4a6zg_board:
-
-ST Nucleo L4A6ZG
-################
+.. zephyr:board:: nucleo_l4a6zg
 
 Overview
 ********
@@ -27,10 +24,6 @@ some highlights of the Nucleo L4A6ZG board:
 - 8 LEDs: user LEDs (LD1, LD2, LD3), communication LED (LD4), USB
   power fault(LD5), power LED (LD6), USB FS OTG (LD7, LD8)
 - 2 push buttons: USER and RESET
-
-.. image:: ../../nucleo_l496zg/doc/img/nucleo_l496zg.jpg
-   :align: center
-   :alt: Nucleo L4A6ZG
 
 More information about the board can be found at the `Nucleo L4A6ZG website`_.
 
@@ -106,40 +99,7 @@ More information about STM32L4A6ZG can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_l4a6zg board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| AES       | on-chip    | crypto                              |
-+-----------+------------+-------------------------------------+
-| FLASH     | on-chip    | flash memory                        |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | System Window Watchdog              |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_l4a6zg/nucleo_l4a6zg_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

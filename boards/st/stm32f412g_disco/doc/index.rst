@@ -1,7 +1,4 @@
-.. _stm32f412g_disco_board:
-
-ST STM32F412G Discovery
-#######################
+.. zephyr:board:: stm32f412g_disco
 
 Overview
 ********
@@ -39,16 +36,12 @@ some highlights of the STM32F412G-DISCO board:
 - Extension connector for direct access to various features of STM32F412ZGT6 MCU
 - Comprehensive free software including a variety of examples, part of STM32Cube package
 
-.. image:: img/stm32f412g_disco.jpg
-     :align: center
-     :alt: STM32F412G-DISCO
-
 More information about the board can be found at the `32F412GDISCOVERY website`_.
 
 Hardware
 ********
 
-STM32F469I-DISCO Discovery kit provides the following hardware components:
+STM32F412G-DISCO Discovery kit provides the following hardware components:
 
 - STM32F412ZGT6 in LQFP144 package
 - ARM |reg| 32-bit Cortex |reg| -M4 CPU with FPU
@@ -79,32 +72,7 @@ More information about STM32F412ZG can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32f412g_disco board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| QSPI NOR  | on-chip    | off-chip flash                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32f412g_disco/stm32f412g_disco_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========

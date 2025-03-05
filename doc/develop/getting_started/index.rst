@@ -23,6 +23,7 @@ Click the operating system you are using.
    .. group-tab:: Ubuntu
 
       This guide covers Ubuntu version 20.04 LTS and later.
+      If you are using a different Linux distribution see :ref:`installation_linux`.
 
       .. code-block:: bash
 
@@ -94,6 +95,11 @@ The current minimum required version for the main dependencies are:
               python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
               make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
 
+         .. note::
+
+            Due to the unavailability of ``gcc-multilib`` and ``g++-multilib`` on AArch64
+            (ARM64) systems, you may need to remove them from the list of packages to install.
+
       #. Verify the versions of the main dependencies installed on your system by entering:
 
          .. code-block:: bash
@@ -154,9 +160,9 @@ The current minimum required version for the main dependencies are:
 
          Therefore, we don't recommend using WSL when getting started.
 
-      These instructions must be run in a ``cmd.exe`` command prompt terminal window.
       In modern version of Windows (10 and later) it is recommended to install the Windows Terminal
-      application from the Microsoft Store. The required commands differ on PowerShell.
+      application from the Microsoft Store. Instructions are provided for a ``cmd.exe`` or
+      PowerShell command prompts.
 
       These instructions rely on `Chocolatey`_. If Chocolatey isn't an option,
       you can install dependencies from their respective websites and ensure
@@ -169,8 +175,9 @@ The current minimum required version for the main dependencies are:
 
       #. `Install chocolatey`_.
 
-      #. Open a ``cmd.exe`` terminal window as **Administrator**. To do so, press the Windows key,
-         type ``cmd.exe``, right-click the :guilabel:`Command Prompt` search result, and choose
+      #. Open a ``cmd.exe`` or PowerShell terminal window as **Administrator**.
+         To do so, press the Windows key, type ``cmd.exe`` or PowerShell, right-click the
+         :guilabel:`Command Prompt` or :guilabel:`PowerShell` search result, and choose
          :guilabel:`Run as Administrator`.
 
       #. Disable global confirmation to avoid having to confirm the
@@ -185,11 +192,11 @@ The current minimum required version for the main dependencies are:
          .. code-block:: bat
 
             choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-            choco install ninja gperf python311 git dtc-msys2 wget 7zip
+            choco install ninja gperf python311 git dtc-msys2 wget 7zip strawberryperl
 
          .. warning::
 
-            As of November 2023, Python 3.12 is not recommended for Zephyr development on Windows,
+            As of November 2024, Python 3.13 is not recommended for Zephyr development on Windows,
             as some required Python dependencies may be difficult to install.
 
       #. Close the terminal window.
@@ -206,8 +213,10 @@ Get Zephyr and install Python dependencies
 ******************************************
 
 Next, clone Zephyr and its :ref:`modules <modules>` into a new :ref:`west
-<west>` workspace named :file:`zephyrproject`. You'll also install Zephyr's
-additional Python dependencies in a `Python virtual environment`_.
+<west>` workspace. In the following instructions the name :file:`zephyrproject`
+is used for the workspace, however in practice its name and location can be freely
+chosen. You'll also install Zephyr's additional Python dependencies in a
+`Python virtual environment`_.
 
 .. _Python virtual environment: https://docs.python.org/3/library/venv.html
 
@@ -264,12 +273,12 @@ additional Python dependencies in a `Python virtual environment`_.
 
             west zephyr-export
 
-      #. Zephyr's ``scripts/requirements.txt`` file declares additional Python
-         dependencies. Install them with ``pip``.
+      #. The Zephyr west extension command, ``west packages`` can be used to install Python
+         dependencies.
 
          .. code-block:: bash
 
-            pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
+            west packages pip --install
 
    .. group-tab:: macOS
 
@@ -316,29 +325,42 @@ additional Python dependencies in a `Python virtual environment`_.
 
             west zephyr-export
 
-      #. Zephyr's ``scripts/requirements.txt`` file declares additional Python
-         dependencies. Install them with ``pip``.
+      #. The Zephyr west extension command, ``west packages`` can be used to install Python
+         dependencies.
 
          .. code-block:: bash
 
-            pip install -r ~/zephyrproject/zephyr/scripts/requirements.txt
+            west packages pip --install
 
    .. group-tab:: Windows
 
-      #. Open a ``cmd.exe`` terminal window **as a regular user**
+      #. Open a ``cmd.exe`` or PowerShell terminal window **as a regular user**
 
       #. Create a new virtual environment:
 
-         .. code-block:: bat
+         .. tabs::
 
-            cd %HOMEPATH%
-            python -m venv zephyrproject\.venv
+            .. code-tab:: bat
+
+               cd %HOMEPATH%
+               python -m venv zephyrproject\.venv
+
+            .. code-tab:: powershell
+
+               cd $Env:HOMEPATH
+               python -m venv zephyrproject\.venv
 
       #. Activate the virtual environment:
 
-         .. code-block:: bat
+         .. tabs::
 
-            zephyrproject\.venv\Scripts\activate.bat
+            .. code-tab:: bat
+
+               zephyrproject\.venv\Scripts\activate.bat
+
+            .. code-tab:: powershell
+
+               zephyrproject\.venv\Scripts\Activate.ps1
 
          Once activated your shell will be prefixed with ``(.venv)``. The
          virtual environment can be deactivated at any time by running
@@ -371,12 +393,12 @@ additional Python dependencies in a `Python virtual environment`_.
 
             west zephyr-export
 
-      #. Zephyr's ``scripts\requirements.txt`` file declares additional Python
-         dependencies. Install them with ``pip``.
+      #. The Zephyr west extension command, ``west packages`` can be used to install Python
+         dependencies.
 
          .. code-block:: bat
 
-            pip install -r %HOMEPATH%\zephyrproject\zephyr\scripts\requirements.txt
+            west packages pip --install
 
 Install the Zephyr SDK
 **********************
@@ -386,12 +408,68 @@ contains toolchains for each of Zephyr's supported architectures, which
 include a compiler, assembler, linker and other programs required to build
 Zephyr applications.
 
-It also contains additional host tools, such as custom QEMU and OpenOCD builds
+For Linux, it also contains additional host tools, such as custom QEMU and OpenOCD builds
 that are used to emulate, flash and debug Zephyr applications.
 
-.. include:: ../toolchains/zephyr_sdk.rst
-   :start-after: toolchain_zephyr_sdk_install_start
-   :end-before: toolchain_zephyr_sdk_install_end
+
+.. tabs::
+
+   .. group-tab:: Ubuntu
+
+      Install the Zephyr SDK using the ``west sdk install``.
+
+         .. code-block:: bash
+
+            cd ~/zephyrproject/zephyr
+            west sdk install
+
+      .. tip::
+
+          Using the command options, you can specify the SDK installation destination
+          and which architecture of toolchains to install.
+          See ``west sdk install --help`` for details.
+
+   .. group-tab:: macOS
+
+      Install the Zephyr SDK using the ``west sdk install``.
+
+         .. code-block:: bash
+
+            cd ~/zephyrproject/zephyr
+            west sdk install
+
+      .. tip::
+
+          Using the command options, you can specify the SDK installation destination
+          and which architecture of toolchains to install.
+          See ``west sdk install --help`` for details.
+
+   .. group-tab:: Windows
+
+      Install the Zephyr SDK using the ``west sdk install``.
+
+         .. tabs::
+
+            .. code-tab:: bat
+
+               cd %HOMEPATH%\zephyrproject\zephyr
+               west sdk install
+
+            .. code-tab:: powershell
+
+               cd $Env:HOMEPATH\zephyrproject\zephyr
+               west sdk install
+
+      .. tip::
+
+          Using the command options, you can specify the SDK installation destination
+          and which architecture of toolchains to install.
+          See ``west sdk install --help`` for details.
+
+.. note::
+
+    If you want to install Zephyr SDK without using the ``west sdk`` command,
+    please see :ref:`toolchain_zephyr_sdk_install`.
 
 .. _getting_started_run_sample:
 
@@ -428,10 +506,17 @@ Build the :zephyr:code-sample:`blinky` with :ref:`west build <west-building>`, c
 
    .. group-tab:: Windows
 
-      .. code-block:: bat
+      .. tabs::
 
-         cd %HOMEPATH%\zephyrproject\zephyr
-         west build -p always -b <your-board-name> samples\basic\blinky
+         .. code-tab:: bat
+
+            cd %HOMEPATH%\zephyrproject\zephyr
+            west build -p always -b <your-board-name> samples\basic\blinky
+
+         .. code-tab:: powershell
+
+            cd $Env:HOMEPATH\zephyrproject\zephyr
+            west build -p always -b <your-board-name> samples\basic\blinky
 
 The ``-p always`` option forces a pristine build, and is recommended for new
 users. Users may also use the ``-p auto`` option, which will use
@@ -461,9 +546,17 @@ Then flash the sample using :ref:`west flash <west-flashing>`:
 
    west flash
 
-You may need to install additional :ref:`host tools <flash-debug-host-tools>`
-required by your board. The ``west flash`` command will print an error if any
-required dependencies are missing.
+.. note::
+
+    You may need to install additional :ref:`host tools <flash-debug-host-tools>`
+    required by your board. The ``west flash`` command will print an error if any
+    required dependencies are missing.
+
+.. note::
+
+    When using Linux, you may need to configure udev rules the first time
+    of using a debug probe.
+    Please also see :ref:`setting-udev-rules`.
 
 If you're using blinky, the LED will start to blink as shown in this figure:
 

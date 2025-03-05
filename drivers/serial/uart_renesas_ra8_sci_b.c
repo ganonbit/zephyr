@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Renesas Electronics Corporation
+ * Copyright (c) 2024-2025 Renesas Electronics Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -256,7 +256,7 @@ static int uart_ra_sci_b_fifo_fill(const struct device *dev, const uint8_t *tx_d
 {
 	struct uart_ra_sci_b_data *data = dev->data;
 	const struct uart_ra_sci_b_config *cfg = dev->config;
-	uint8_t num_tx = 0U;
+	int num_tx = 0U;
 
 	if (IS_ENABLED(CONFIG_UART_RA_SCI_B_UART_FIFO_ENABLE) && data->sci.fifo_depth > 0) {
 		while ((size - num_tx > 0) && cfg->regs->FTSR != 0x10U) {
@@ -281,7 +281,7 @@ static int uart_ra_sci_b_fifo_read(const struct device *dev, uint8_t *rx_data, c
 {
 	struct uart_ra_sci_b_data *data = dev->data;
 	const struct uart_ra_sci_b_config *cfg = dev->config;
-	uint8_t num_rx = 0U;
+	int num_rx = 0U;
 
 	if (IS_ENABLED(CONFIG_UART_RA_SCI_B_UART_FIFO_ENABLE) && data->sci.fifo_depth > 0) {
 		while ((size - num_rx > 0) && cfg->regs->FRSR_b.R > 0U) {
@@ -833,7 +833,7 @@ static void uart_ra_sci_b_callback_adapter(struct st_uart_callback_arg *fsp_args
 
 #endif /* CONFIG_UART_ASYNC_API */
 
-static const struct uart_driver_api uart_ra_sci_b_driver_api = {
+static DEVICE_API(uart, uart_ra_sci_b_driver_api) = {
 	.poll_in = uart_ra_sci_b_poll_in,
 	.poll_out = uart_ra_sci_b_poll_out,
 	.err_check = uart_ra_sci_b_err_check,
@@ -995,28 +995,23 @@ static void uart_ra_sci_b_eri_isr(const struct device *dev)
 
 #endif /* defined(CONFIG_UART_INTERRUPT_DRIVEN) || defined(CONFIG_UART_ASYNC_API) */
 
-#define _ELC_EVENT_SCI_RXI(channel) ELC_EVENT_SCI##channel##_RXI
-#define _ELC_EVENT_SCI_TXI(channel) ELC_EVENT_SCI##channel##_TXI
-#define _ELC_EVENT_SCI_TEI(channel) ELC_EVENT_SCI##channel##_TEI
-#define _ELC_EVENT_SCI_ERI(channel) ELC_EVENT_SCI##channel##_ERI
-
-#define ELC_EVENT_SCI_RXI(channel) _ELC_EVENT_SCI_RXI(channel)
-#define ELC_EVENT_SCI_TXI(channel) _ELC_EVENT_SCI_TXI(channel)
-#define ELC_EVENT_SCI_TEI(channel) _ELC_EVENT_SCI_TEI(channel)
-#define ELC_EVENT_SCI_ERI(channel) _ELC_EVENT_SCI_ERI(channel)
+#define EVENT_SCI_RXI(channel) BSP_PRV_IELS_ENUM(CONCAT(EVENT_SCI, channel, _RXI))
+#define EVENT_SCI_TXI(channel) BSP_PRV_IELS_ENUM(CONCAT(EVENT_SCI, channel, _TXI))
+#define EVENT_SCI_TEI(channel) BSP_PRV_IELS_ENUM(CONCAT(EVENT_SCI, channel, _TEI))
+#define EVENT_SCI_ERI(channel) BSP_PRV_IELS_ENUM(CONCAT(EVENT_SCI, channel, _ERI))
 
 #if defined(CONFIG_UART_INTERRUPT_DRIVEN) || defined(CONFIG_UART_ASYNC_API)
 
 #define UART_RA_SCI_B_IRQ_CONFIG_INIT(index)                                                       \
 	do {                                                                                       \
 		R_ICU->IELSR[DT_IRQ_BY_NAME(DT_INST_PARENT(index), rxi, irq)] =                    \
-			ELC_EVENT_SCI_RXI(DT_INST_PROP(index, channel));                           \
+			EVENT_SCI_RXI(DT_INST_PROP(index, channel));                               \
 		R_ICU->IELSR[DT_IRQ_BY_NAME(DT_INST_PARENT(index), txi, irq)] =                    \
-			ELC_EVENT_SCI_TXI(DT_INST_PROP(index, channel));                           \
+			EVENT_SCI_TXI(DT_INST_PROP(index, channel));                               \
 		R_ICU->IELSR[DT_IRQ_BY_NAME(DT_INST_PARENT(index), tei, irq)] =                    \
-			ELC_EVENT_SCI_TEI(DT_INST_PROP(index, channel));                           \
+			EVENT_SCI_TEI(DT_INST_PROP(index, channel));                               \
 		R_ICU->IELSR[DT_IRQ_BY_NAME(DT_INST_PARENT(index), eri, irq)] =                    \
-			ELC_EVENT_SCI_ERI(DT_INST_PROP(index, channel));                           \
+			EVENT_SCI_ERI(DT_INST_PROP(index, channel));                               \
                                                                                                    \
 		IRQ_CONNECT(DT_IRQ_BY_NAME(DT_INST_PARENT(index), rxi, irq),                       \
 			    DT_IRQ_BY_NAME(DT_INST_PARENT(index), rxi, priority),                  \
@@ -1108,6 +1103,10 @@ static void uart_ra_sci_b_eri_isr(const struct device *dev)
 #define UART_RA_SCI_B_DTC_INIT(index)
 #endif
 
+#define FLOW_CTRL_PARAMETER(index)                                                                 \
+	COND_CODE_1(DT_INST_PROP(index, hw_flow_control),                                          \
+	(UART_CFG_FLOW_CTRL_RTS_CTS), (UART_CFG_FLOW_CTRL_NONE))
+
 #define UART_RA_SCI_B_INIT(index)                                                                  \
 	PINCTRL_DT_DEFINE(DT_INST_PARENT(index));                                                  \
                                                                                                    \
@@ -1123,9 +1122,7 @@ static void uart_ra_sci_b_eri_isr(const struct device *dev)
 				.parity = UART_CFG_PARITY_NONE,                                    \
 				.stop_bits = UART_CFG_STOP_BITS_1,                                 \
 				.data_bits = UART_CFG_DATA_BITS_8,                                 \
-				.flow_ctrl = COND_CODE_1(DT_NODE_HAS_PROP(idx, hw_flow_control),   \
-							 (UART_CFG_FLOW_CTRL_RTS_CTS),             \
-							 (UART_CFG_FLOW_CTRL_NONE)),               \
+				.flow_ctrl = FLOW_CTRL_PARAMETER(index),                           \
 			},                                                                         \
 		.fsp_config =                                                                      \
 			{                                                                          \

@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <errno.h>
 
+#include <zephyr/bluetooth/iso.h>
 #include <zephyr/types.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/ring_buffer.h>
@@ -569,9 +570,6 @@ static void stream_disabled(struct bt_bap_stream *stream)
 
 	LOG_DBG("Disabled stream %p", stream);
 
-	/* Stop send timer */
-	btp_bap_audio_stream_stopped(&u_stream->audio_stream);
-
 	btp_send_ascs_operation_completed_ev(stream->conn, u_stream->ase_id,
 					     BT_ASCS_DISABLE_OP, BTP_ASCS_STATUS_SUCCESS);
 }
@@ -586,9 +584,6 @@ static void stream_released(struct bt_bap_stream *stream)
 	LOG_DBG("Released stream %p", stream);
 
 	u_conn = &connections[u_stream->conn_id];
-
-	/* Stop send timer */
-	btp_bap_audio_stream_stopped(&u_stream->audio_stream);
 
 	if (stream->ep != NULL) {
 		(void)bt_bap_ep_get_info(stream->ep, &info);
@@ -631,7 +626,15 @@ static void stream_started(struct bt_bap_stream *stream)
 
 	LOG_DBG("Started stream %p", stream);
 
-	btp_bap_audio_stream_started(&u_stream->audio_stream);
+	/* Start TX */
+	if (btp_bap_audio_stream_can_send(&u_stream->audio_stream)) {
+		int err;
+
+		err = btp_bap_audio_stream_tx_register(&u_stream->audio_stream);
+		if (err != 0) {
+			LOG_ERR("Failed to register stream: %d", err);
+		}
+	}
 
 	(void)bt_bap_ep_get_info(stream->ep, &info);
 	btp_send_ascs_ase_state_changed_ev(stream->conn, u_stream->ase_id, info.state);
@@ -663,7 +666,14 @@ static void stream_stopped(struct bt_bap_stream *stream, uint8_t reason)
 
 	LOG_DBG("Stopped stream %p with reason 0x%02X", stream, reason);
 
-	btp_bap_audio_stream_stopped(&u_stream->audio_stream);
+	if (btp_bap_audio_stream_can_send(&u_stream->audio_stream)) {
+		int err;
+
+		err = btp_bap_audio_stream_tx_unregister(&u_stream->audio_stream);
+		if (err != 0) {
+			LOG_ERR("Failed to unregister stream: %d", err);
+		}
+	}
 
 	btp_send_ascs_operation_completed_ev(stream->conn, u_stream->ase_id,
 					     BT_ASCS_STOP_OP, BTP_STATUS_SUCCESS);
@@ -702,15 +712,14 @@ static void stream_recv(struct bt_bap_stream *stream,
 		/* For now, send just a first packet, to limit the number
 		 * of logs and not unnecessarily spam through btp.
 		 */
-		LOG_DBG("Incoming audio on stream %p len %u", stream, buf->len);
-		u_stream->already_sent = true;
-		send_stream_received_ev(stream->conn, stream->ep, buf->len, buf->data);
-	}
-}
+		LOG_DBG("Incoming audio on stream %p len %u flags 0x%02X seq_num %u and ts %u",
+			stream, buf->len, info->flags, info->seq_num, info->ts);
 
-static void stream_sent(struct bt_bap_stream *stream)
-{
-	LOG_DBG("Stream %p sent", stream);
+		if ((info->flags & BT_ISO_FLAGS_VALID) == 0) {
+			u_stream->already_sent = true;
+			send_stream_received_ev(stream->conn, stream->ep, buf->len, buf->data);
+		}
+	}
 }
 
 static struct bt_bap_stream_ops stream_ops = {
@@ -723,7 +732,7 @@ static struct bt_bap_stream_ops stream_ops = {
 	.started = stream_started,
 	.stopped = stream_stopped,
 	.recv = stream_recv,
-	.sent = stream_sent,
+	.sent = btp_bap_audio_stream_sent_cb,
 	.connected = stream_connected,
 };
 
@@ -1130,6 +1139,7 @@ int btp_bap_unicast_group_create(uint8_t cig_id,
 	}
 
 	cigs[cig_id].in_use = true;
+	cigs[cig_id].cig_id = cig_id;
 	*out_unicast_group = &cigs[cig_id];
 
 	return 0;

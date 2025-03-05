@@ -1,7 +1,4 @@
-.. _stm32f072b_disco_board:
-
-ST STM32F072B Discovery
-#######################
+.. zephyr:board:: stm32f072b_disco
 
 Overview
 ********
@@ -28,10 +25,6 @@ started quickly. Here are some highlights of the STM32F072B-DISCO board:
 - L3GD20, ST MEMS motion sensor, 3-axis digital output gyroscope
 - One linear touch sensor or four touch keys
 - RF EEprom daughter board connector
-
-.. image:: img/stm32f072b_disco.jpg
-     :align: center
-     :alt: STM32F072B-DISCO
 
 More information about the board can be found at the
 `STM32F072B-DISCO website`_.
@@ -67,39 +60,9 @@ More information about STM32F072RB can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32f072b_disco board configuration supports the following hardware
-features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| WATCHDOG  | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c controller                      |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | SPI controller                      |
-+-----------+------------+-------------------------------------+
-| CAN       | on-chip    | CAN controller                      |
-+-----------+------------+-------------------------------------+
+.. zephyr:board-supported-hw::
 
 .. note:: CAN feature requires CAN transceiver, such as `SK Pang CAN breakout board`_.
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/stm32f072b_disco/stm32f072b_disco_defconfig`
-
 
 Pin Mapping
 ===========

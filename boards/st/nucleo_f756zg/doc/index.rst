@@ -1,7 +1,4 @@
-.. _nucleo_f756zg_board:
-
-ST Nucleo F756ZG
-################
+.. zephyr:board:: nucleo_f756zg
 
 Overview
 ********
@@ -44,10 +41,6 @@ Key Features
 - STM32Cube MCU package.
 - Arm* Mbed Enabled* compliant (only for some Nucleo part numbers)
 
-.. image:: img/nucleo_f756zg.jpg
-   :align: center
-   :alt: Nucleo F756ZG
-
 More information about the board can be found at the `Nucleo F756ZG website`_.
 
 Hardware
@@ -88,35 +81,7 @@ Nucleo F756ZG provides the following hardware components:
 Supported Features
 ==================
 
-The Zephyr nucleo_f756zg board configuration supports the following hardware
-features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port                         |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| ETHERNET  | on-chip    | ethernet                            |
-+-----------+------------+-------------------------------------+
-| USB       | on-chip    | usb_device                          |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f756zg/nucleo_f756zg_defconfig`
+.. zephyr:board-supported-hw::
 
 For more details please refer to `STM32 Nucleo-144 board User Manual`_.
 

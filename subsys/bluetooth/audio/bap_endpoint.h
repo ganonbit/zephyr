@@ -9,6 +9,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include <zephyr/autoconf.h>
 #include <zephyr/bluetooth/audio/audio.h>
@@ -108,7 +109,6 @@ struct bt_bap_broadcast_source {
 	uint8_t stream_count;
 	uint8_t packing;
 	bool encryption;
-	uint32_t broadcast_id; /* 24 bit */
 
 	struct bt_iso_big *big;
 	struct bt_bap_qos_cfg *qos;
@@ -123,7 +123,7 @@ struct bt_bap_broadcast_source {
 	/* The codec specific configured data for each stream in the subgroup */
 	struct bt_audio_broadcast_stream_data stream_data[BROADCAST_STREAM_CNT];
 #endif /* CONFIG_BT_AUDIO_CODEC_CFG_MAX_DATA_SIZE > 0 */
-	uint8_t broadcast_code[BT_AUDIO_BROADCAST_CODE_SIZE];
+	uint8_t broadcast_code[BT_ISO_BROADCAST_CODE_SIZE];
 
 	/* The complete codec specific configured data for each stream in the subgroup.
 	 * This contains both the subgroup and the BIS-specific data for each stream.
@@ -181,6 +181,8 @@ struct bt_bap_broadcast_sink {
 	struct bt_bap_qos_cfg qos_cfg;
 	struct bt_le_per_adv_sync *pa_sync;
 	struct bt_iso_big *big;
+	uint8_t base_size;
+	uint8_t base[BT_BASE_MAX_SIZE];
 	struct bt_bap_broadcast_sink_bis bis[CONFIG_BT_BAP_BROADCAST_SNK_STREAM_COUNT];
 	struct bt_bap_broadcast_sink_subgroup subgroups[CONFIG_BT_BAP_BROADCAST_SNK_SUBGROUP_COUNT];
 	const struct bt_bap_scan_delegator_recv_state *recv_state;

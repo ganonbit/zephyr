@@ -1,7 +1,4 @@
-.. _stm32h750b_dk_board:
-
-ST STM32H750B Discovery Kit
-###########################
+.. zephyr:board:: stm32h750b_dk
 
 Overview
 ********
@@ -27,10 +24,6 @@ programmer for the STM32 MCU and USB Virtual COM port bridge. STM32H750B-DK boar
 comes with the STM32CubeH7 MCU Package, which provides an STM32 comprehensive
 software HAL library as well as various software examples.
 
-.. image:: img/stm32h750b_dk.png
-     :align: center
-     :alt: STM32H750B-DK
-
 More information about the board can be found at the `STM32H750B-DK website`_.
 More information about STM32H750 can be found here:
 
@@ -41,37 +34,7 @@ More information about STM32H750 can be found here:
 Supported Features
 ==================
 
-The current Zephyr stm32h750b_dk board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| QSPI NOR  | on-chip    | off-chip flash                      |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| LTDC      | on-chip    | display                             |
-+-----------+------------+-------------------------------------+
-| QSPI NOR  | on-chip    | off-chip flash                      |
-+-----------+------------+-------------------------------------+
-| FMC       | on-chip    | memc (SDRAM)                        |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on Zephyr porting.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/stm32h750b_dk/stm32h750b_dk_defconfig`
+.. zephyr:board-supported-hw::
 
 Pin Mapping
 ===========
@@ -84,6 +47,7 @@ Default Zephyr Peripheral Mapping:
 - UART_3 TX/RX : PB10/PB11 (ST-Link Virtual Port Com)
 - LD1 : PJ2
 - LD2 : PI13
+- USART1 TX/RX : PB6/PB7 (Arduino D1/D0)
 
 System Clock
 ============

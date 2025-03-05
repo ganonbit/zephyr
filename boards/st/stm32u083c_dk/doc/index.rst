@@ -1,7 +1,4 @@
-.. _stm32u083c_dk_board:
-
-ST STM32U083C_DK
-################
+.. zephyr:board:: stm32u083c_dk
 
 Overview
 ********
@@ -35,10 +32,6 @@ board:
 - User joystick
 - Touchkey
 - Temperature sensor
-
-.. image:: img/stm32u083c_dk.jpg
-   :align: center
-   :alt: STM32U083C_DK
 
 More information about the board can be found at the `STM32U083_DK website`_.
 
@@ -151,34 +144,7 @@ More information about STM32U083MC can be found here:
 Supported Features
 ==================
 
-The Zephyr stm32u083c_dk board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | adc                                 |
-+-----------+------------+-------------------------------------+
-| DAC       | on-chip    | DAC Controller                      |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/stm32u083c_dk/stm32u083c_dk_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

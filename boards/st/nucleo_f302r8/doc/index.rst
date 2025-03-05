@@ -1,7 +1,4 @@
-.. _nucleo_f302r8_board:
-
-ST Nucleo F302R8
-################
+.. zephyr:board:: nucleo_f302r8
 
 Overview
 ********
@@ -26,10 +23,6 @@ Here are some highlights of the Nucleo F302R8 board:
 
 - One user LED
 - Two push-buttons: USER and RESET
-
-.. image:: img/nucleo_f302r8.jpg
-   :align: center
-   :alt: Nucleo F302R8
 
 More information about the board can be found at the `Nucleo F302R8 website`_,
 and in the `STM32 Nucleo-64 board User Manual`_.
@@ -74,34 +67,7 @@ More information about the STM32F302R8 can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_f302r8 board configuration supports the following hardware
-features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| SPI       | on-chip    | spi                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_f302r8/nucleo_f302r8_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

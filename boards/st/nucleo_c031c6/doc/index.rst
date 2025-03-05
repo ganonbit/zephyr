@@ -1,7 +1,4 @@
-.. _nucleo_c031c6_board:
-
-ST Nucleo C031C6
-################
+.. zephyr:board:: nucleo_c031c6
 
 Overview
 ********
@@ -15,10 +12,6 @@ The STM32 Nucleo board integrates the ST-LINK/V2-1 debugger and programmer.
 
 The STM32 Nucleo board comes with the STM32 comprehensive software HAL library together
 with various packaged software examples.
-
-.. image:: img/nucleo_c031c6.jpg
-   :align: center
-   :alt: Nucleo C031C6
 
 More information about the board can be found at the `Nucleo C031C6 website`_.
 
@@ -58,45 +51,7 @@ More information about STM32C031C6 can be found here:
 Supported Features
 ==================
 
-The Zephyr nucleo_c031c6 board configuration supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| CLOCK     | on-chip    | reset and clock control             |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | counter                             |
-+-----------+------------+-------------------------------------+
-| IWDG      | on-chip    | independent watchdog                |
-+-----------+------------+-------------------------------------+
-| WWDG      | on-chip    | window watchdog                     |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| ADC       | on-chip    | ADC Controller                      |
-+-----------+------------+-------------------------------------+
-| die-temp  | on-chip    | die temperature sensor              |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-| DMA       | on-chip    | Direct Memory Access                |
-+-----------+------------+-------------------------------------+
-| RTC       | on-chip    | rtc                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported in this Zephyr port.
-
-The default configuration can be found in
-:zephyr_file:`boards/st/nucleo_c031c6/nucleo_c031c6_defconfig`
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

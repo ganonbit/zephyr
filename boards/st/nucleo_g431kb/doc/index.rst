@@ -1,7 +1,4 @@
-.. _nucleo_g431kb_board:
-
-ST Nucleo G431KB
-################
+.. zephyr:board:: nucleo_g431kb
 
 Overview
 ********
@@ -21,10 +18,6 @@ Here are some highlights of the Nucleo G431KB board:
 - Three LEDs: USB communication (LD1), power LED (LD3), user LED (LD2)
 - One push-button for RESET
 
-.. image:: img/nucleo_g431kb.webp
-  :align: center
-  :alt: Nucleo G431kB
-
 More information about the board can be found at the `Nucleo G431KB website`_.
 
 - Development support: serial wire debug (SWD), JTAG, Embedded Trace Macrocell.
@@ -37,30 +30,7 @@ More information about STM32G431KB can be found here:
 Supported Features
 ==================
 
-The Zephyr ``nucleo_g431kb`` board target supports the following hardware features:
-
-+-----------+------------+-------------------------------------+
-| Interface | Controller | Driver/Component                    |
-+===========+============+=====================================+
-| NVIC      | on-chip    | nested vector interrupt controller  |
-+-----------+------------+-------------------------------------+
-| UART      | on-chip    | serial port-polling;                |
-|           |            | serial port-interrupt               |
-+-----------+------------+-------------------------------------+
-| PINMUX    | on-chip    | pinmux                              |
-+-----------+------------+-------------------------------------+
-| GPIO      | on-chip    | gpio                                |
-+-----------+------------+-------------------------------------+
-| PWM       | on-chip    | pwm                                 |
-+-----------+------------+-------------------------------------+
-| I2C       | on-chip    | i2c                                 |
-+-----------+------------+-------------------------------------+
-
-Other hardware features are not yet supported on this Zephyr port.
-
-The default configuration can be found in the defconfig file:
-:zephyr_file:`boards/st/nucleo_g431kb/nucleo_g431kb_defconfig`
-
+.. zephyr:board-supported-hw::
 
 Connections and IOs
 ===================

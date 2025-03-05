@@ -92,7 +92,7 @@ The above figure illustrates some states, from (a) to (d), for channels from ``C
 ``Subscriber 1``, and the observations. The last two are in orange to indicate they are dynamically
 allocated (runtime observation). (a) shows that the observer and all observations are enabled. (b)
 shows the observer is disabled, so the event dispatcher will ignore it. (c) shows the observer
-enabled. However, there is one static observervation disabled. The event dispatcher will only stop
+enabled. However, there is one static observation disabled. The event dispatcher will only stop
 sending notifications from channel ``C3``.  In (d), the event dispatcher will stop sending
 notifications from channels ``C3`` and ``C5`` to ``Subscriber 1``.
 
@@ -634,6 +634,34 @@ the defined channels and observers.
 
     ZBUS_OBS_DECLARE(my_listener, my_subscriber);
     ZBUS_CHAN_DECLARE(acc_chan, version_chan);
+
+
+Unique channel identifiers
+--------------------------
+
+To simplify integrations with external entities, it is possible to assign a unique numeric identifier
+to a channel. Users can then retrieve the channel reference by using the identifier with
+:c:func:`zbus_chan_from_id`, rather than needing to obtain the reference at compile time with
+:c:macro:`ZBUS_CHAN_DECLARE`. Channels using this feature are declared with
+:c:func:`ZBUS_CHAN_DEFINE_WITH_ID`.
+
+.. code-block:: c
+
+    ZBUS_CHAN_DEFINE_WITH_ID(control_chan,    /* Name */
+        0x12345678,              /* Unique channel identifier */
+        struct control_msg,      /* Message type */
+        control_validator,       /* Validator */
+        &message_count,          /* User data */
+        ZBUS_OBSERVERS_EMPTY,    /* observers */
+        ZBUS_MSG_INIT(.move = 0) /* Initial value */
+    );
+
+    static void channel_retrieve(void)
+    {
+        const struct zbus_channel *chan = zbus_chan_from_id(0x12345678);
+
+        ...
+    }
 
 
 Iterating over channels and observers

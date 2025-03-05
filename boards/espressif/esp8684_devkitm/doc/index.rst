@@ -1,7 +1,4 @@
-.. _esp8684_devkitm:
-
-ESP8684-DevKitM
-###############
+.. zephyr:board:: esp8684_devkitm
 
 Overview
 ********
@@ -65,6 +62,8 @@ Current Zephyr's ESP8684-DevKitM board supports the following features:
 | TRNG       | on-chip    | entropy                             |
 +------------+------------+-------------------------------------+
 | Timers     | on-chip    | counter                             |
++------------+------------+-------------------------------------+
+| ADC        | on-chip    | adc                                 |
 +------------+------------+-------------------------------------+
 | Wi-Fi      | on-chip    |                                     |
 +------------+------------+-------------------------------------+
@@ -241,6 +240,8 @@ You can debug an application in the usual way. Here is an example for the :zephy
 
 References
 **********
+
+.. target-notes::
 
 .. _`ESP8684-DevKitM User Guide`: https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp8684/esp8684-devkitm-1/user_guide.html
 .. _`ESP8684 Datasheet`: https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf
